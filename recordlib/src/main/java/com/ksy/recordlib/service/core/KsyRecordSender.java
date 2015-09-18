@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.ksy.recordlib.service.util.Constants;
 import com.ksy.recordlib.service.util.NetworkMonitor;
+import com.ksy.recordlib.service.util.URLConverter;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -326,14 +327,14 @@ public class KsyRecordSender {
 
     public void setRecorderData(String url, int j) {
         Log.e(TAG, "setRecorderData ..");
-        mUrl = url;
+        mUrl = URLConverter.convertUrl(url);
         int i = _set_output_url(mUrl);
-        Log.e(TAG, "_set_output_url .." + i);
+        Log.e(TAG, "_set_output_url .." + i + " url=" + mUrl);
         //3视频  0音频
         if (j == FIRST_OPEN) {
             int k = _open();
             connected = k == 0;
-            Log.e(TAG, "connected .." + k);
+            Log.e(TAG, "connected .. open result=" + k);
         }
     }
 
