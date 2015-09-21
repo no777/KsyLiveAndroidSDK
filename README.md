@@ -55,7 +55,7 @@ KSYLiveSDK for Android(以下简称SDK)是基于RTMP的推流器
 	builder.setVideoProfile(CamcorderProfile.QUALITY_480P).setUrl(Constants.URL_DEFAULT);
 	config = builder.build();
 ```
-####开始停止推留
+####开始停止推流
 
 - 开始推流
 ```
