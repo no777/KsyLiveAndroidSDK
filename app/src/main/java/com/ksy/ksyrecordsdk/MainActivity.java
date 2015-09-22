@@ -11,7 +11,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,7 +21,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.heinrichreimersoftware.materialdrawer.DrawerView;
 import com.heinrichreimersoftware.materialdrawer.structure.DrawerItem;
 import com.ksy.ksyrecordsdk.com.ksy.ksyrecordsdk.config.DrawerItemConfigAdapter;
@@ -124,30 +122,29 @@ public class MainActivity extends AppCompatActivity {
         drawer.setOnItemClickListener(new DrawerItem.OnItemClickListener() {
             @Override
             public void onClick(final DrawerItem drawerItem, long l, final int position) {
-                if (position == Constants.SETTING_URL) {
-                    new MaterialDialog.Builder(MainActivity.this)
-                            .title(R.string.Url)
-                            .inputType(InputType.TYPE_CLASS_TEXT)
-                            .input("input rtmp server url", config.getUrl(), new MaterialDialog.InputCallback() {
-                                @Override
-                                public void onInput(MaterialDialog dialog, CharSequence input) {
-                                    config.setmUrl(input.toString());
-                                    drawerItem.setTextSecondary(input.toString());
-                                }
-                            }).show();
-                } else {
-                    MaterialDialog.Builder builder = new MaterialDialog.Builder(MainActivity.this);
-                    builder.itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
-                        @Override
-                        public boolean onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
-                            adapter.onItemSelected(drawerItem, position, which, null);
-                            return false;
-                        }
-                    });
-                    builder.positiveText(R.string.choose);
-                    adapter.setDialogItems(builder, position);
-                    builder.show().setSelectedIndex(adapter.setDefaultSelected(position));
-                }
+//                if (position == Constants.SETTING_URL) {
+//                    new AlertDialog.Builder(MainActivity.this)
+//                            .setTitle(R.string.Url)
+//                            .set(InputType.TYPE_CLASS_TEXT)
+//                            .input("input rtmp server url", config.getUrl(), new MaterialDialog.InputCallback() {
+//                                @Override
+//                                public void onInput(MaterialDialog dialog, CharSequence input) {
+//                                    config.setmUrl(input.toString());
+//                                    drawerItem.setTextSecondary(input.toString());
+//                                }
+//                            }).show();
+//                } else {//                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+//                    builder.itemsCallbackSingleChoice(-1, new AlertDialog.ListCallbackSingleChoice() {
+//                        @Override
+//                        public boolean onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+//                            adapter.onItemSelected(drawerItem, position, which, null);
+//                            return false;
+//                        }
+//                    });
+//                    builder.positiveText(R.string.choose);
+//                    adapter.setDialogItems(builder, position);
+//                    builder.show().setSelectedIndex(adapter.setDefaultSelected(position));
+//                }
             }
         });
     }
