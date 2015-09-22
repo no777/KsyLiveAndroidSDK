@@ -4,7 +4,6 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.util.Log;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.heinrichreimersoftware.materialdrawer.structure.DrawerItem;
 import com.ksy.ksyrecordsdk.R;
 import com.ksy.recordlib.service.core.CameraHelper;
@@ -52,16 +51,16 @@ public class DrawerItemConfigAdapter {
         return this;
     }
 
-    /**
-     * set drawer items
-     */
-    public MaterialDialog.Builder setDialogItems(MaterialDialog.Builder builder, int pos) {
-        ConfigItem drawerItem = items.get(pos);
-        if (pos == Constants.SETTING_VIDEO_SIZE) makeVideoProfile(drawerItem);
-        builder.title(drawerItem.configName)
-                .items(drawerItem.configValueName);
-        return builder;
-    }
+//    /**
+//     * set drawer items
+//     */
+//    public MaterialDialog.Builder setDialogItems(MaterialDialog.Builder builder, int pos) {
+//        ConfigItem drawerItem = items.get(pos);
+//        if (pos == Constants.SETTING_VIDEO_SIZE) makeVideoProfile(drawerItem);
+//        builder.title(drawerItem.configName)
+//                .items(drawerItem.configValueName);
+//        return builder;
+//    }
 
     public int setDefaultSelected(int pos) {
         ConfigItem drawerItem = items.get(pos);
