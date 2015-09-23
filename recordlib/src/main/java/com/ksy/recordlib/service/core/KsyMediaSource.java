@@ -100,6 +100,7 @@ public abstract class KsyMediaSource implements Runnable {
         public void setAvDistance(int avDistance) {
             if (forceSyncFlag) {
                 lastTS += avDistance;
+                KsyRecordSender.getRecordInstance().clearData();
                 forceSyncFlag = false;
             } else {
                 this.avDistance = avDistance;

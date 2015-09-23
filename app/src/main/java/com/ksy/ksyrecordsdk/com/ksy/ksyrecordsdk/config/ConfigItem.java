@@ -31,7 +31,7 @@ public class ConfigItem {
                 currentValueString = config.getCameraType();
                 break;
             case Constants.SETTING_VIDEO_SIZE:
-                currentValueString = CameraHelper.cameraSizeToInt(config.getVideoWidth(), config.getVideoHeigh());
+                currentValueString = CameraHelper.cameraSizeToInt(config.getVideoWidth(), config.getVideoHeight());
                 break;
         }
         return currentValueString;
@@ -56,7 +56,7 @@ public class ConfigItem {
                 currentValue = config.getCameraType() == Constants.CONFIG_CAMERA_TYPE_BACK ? "back" : "front";
                 break;
             case Constants.SETTING_VIDEO_SIZE:
-                currentValue = config.getVideoWidth() + "x" + config.getVideoHeigh();
+                currentValue = config.getVideoWidth() + "x" + config.getVideoHeight();
                 break;
             case Constants.SETTING_URL:
                 currentValue = "click to set";
@@ -82,7 +82,7 @@ public class ConfigItem {
                 break;
             case Constants.SETTING_VIDEO_SIZE:
                 config.setmVideoWidth(CameraHelper.intToCameraWidth(configValue[selected]));
-                config.setmVideoHeigh(CameraHelper.intToCameraHeight(configValue[selected]));
+                config.setmVideoHeight(CameraHelper.intToCameraHeight(configValue[selected]));
                 break;
             case Constants.SETTING_URL:
                 config.setmUrl(value);

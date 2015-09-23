@@ -8,7 +8,7 @@ public class Constants {
     // Voice Encode Default
 //    public static final String URL_DEFAULT = "rtmp://xiaoyi.uplive.ksyun.com:80/live/hansen2?public=1&expire=1710333230&nonce=12341234&accesskey=2HITWMQXL2VBB3XMAEHQ&signature=1wgD2F56CDUizTp0%2fj3DJ%2fasSsY%3d";
 //    public static final String URL_DEFAULT = "rtmp://115.231.96.121:80/live/hansen223?public=1&expire=1710333230&nonce=12341234&accesskey=2HITWMQXL2VBB3XMAEHQ&signature=1wgD2F56CDUizTp0%2fj3DJ%2fasSsY%3d";
-    public static final String URL_DEFAULT = "rtmp://192.168.135.185/myTestLive/eflakee2330";
+    public static final String URL_DEFAULT = "rtmp://180.76.140.24/live/eflake2";
     public static final int ENCODE_MODE_MEDIA_RECORDER = 0;
     public static final int ENCODE_MODE_MEDIA_CODEC = 1;
     public static final int ENCODE_MODE_WEBRTC = 2;

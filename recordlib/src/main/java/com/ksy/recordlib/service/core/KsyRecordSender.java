@@ -116,7 +116,7 @@ public class KsyRecordSender {
         return "currentTransferVideoBr=" + currentVideoBitrate +
                 ", currentTransferAudiobr:" + currentAudioBitrate +
                 "\n,vFps =" + vidoeFps.getSpeed() + " aFps=" + audioFps.getSpeed() + " dropA:" + dropAudioCount + " dropV" + dropVideoCount +
-                "\n, lastSendAudioTs:" + lastSendAudioTs + "det=" + (lastSendAudioTs - lastSendVideoDts) + ",size=" + recordPQueue.size() + "\nf_v=" + frame_video + " f_a=" + frame_audio + "\n" + KsyMediaSource.sync.lastMessage;
+                "\n, lastSendAudioTs:" + lastSendAudioTs + "stAvDist=" + (lastSendAudioTs - lastSendVideoDts) + ",size=" + recordPQueue.size() + "\nf_v=" + frame_video + " f_a=" + frame_audio + "\n" + KsyMediaSource.sync.lastMessage;
     }
 
     public void start(Context pContext) throws IOException {

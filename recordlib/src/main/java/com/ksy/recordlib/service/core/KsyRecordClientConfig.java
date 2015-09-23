@@ -19,14 +19,15 @@ public class KsyRecordClientConfig {
     int mVoiceType;
     int mAudioSampleRate;
     int mAudioBitRate;
-    int mAudioEncorder;
+    int mAudioEncoder;
     int mVideoFrameRate;
     int mVideoBitRate;
     int mDropFrameFrequency;
     int mVideoWidth;
-    int mVideoHeigh;
-    int mVideoEncorder;
+    int mVideoHeight;
+    int mVideoEncoder;
     int mVideoProfile;
+    int cameraOriention;
 
     String mUrl;
 
@@ -35,9 +36,9 @@ public class KsyRecordClientConfig {
         mVoiceType = builder.mVoiceType;
         mAudioSampleRate = builder.mAudioSampleRate;
         mAudioBitRate = builder.mAudioBitRate;
-        mAudioEncorder = builder.mAudioEncorder;
+        mAudioEncoder = builder.mAudioEncorder;
         mDropFrameFrequency = builder.mDropFrameFrequency;
-        mVideoEncorder = builder.mVideoEncorder;
+        mVideoEncoder = builder.mVideoEncorder;
         mVideoProfile = builder.mVideoProfile;
         mUrl = builder.mUrl;
         if (mVideoProfile >= 0) {
@@ -61,13 +62,13 @@ public class KsyRecordClientConfig {
                 this.mVideoFrameRate = camcorderProfile.videoFrameRate;
                 this.mVideoBitRate = camcorderProfile.videoBitRate;
                 this.mVideoWidth = camcorderProfile.videoFrameWidth;
-                this.mVideoHeigh = camcorderProfile.videoFrameHeight;
+                this.mVideoHeight = camcorderProfile.videoFrameHeight;
             }
         }
         mVideoFrameRate = builder.mVideoFrameRate;
         mVideoBitRate = builder.mVideoBitRate;
         mVideoWidth = builder.mVideoWidth > 0 ? builder.mVideoWidth : mVideoWidth;
-        mVideoHeigh = builder.mVideoHeigh > 0 ? builder.mVideoHeigh : mVideoHeigh;
+        mVideoHeight = builder.mVideoHeigh > 0 ? builder.mVideoHeigh : mVideoHeight;
     }
 
     public int getCameraType() {
@@ -86,8 +87,8 @@ public class KsyRecordClientConfig {
         return mAudioBitRate;
     }
 
-    public int getAudioEncorder() {
-        return mAudioEncorder;
+    public int getAudioEncoder() {
+        return mAudioEncoder;
     }
 
     public int getVideoFrameRate() {
@@ -106,12 +107,12 @@ public class KsyRecordClientConfig {
         return mVideoWidth;
     }
 
-    public int getVideoHeigh() {
-        return mVideoHeigh;
+    public int getVideoHeight() {
+        return mVideoHeight;
     }
 
-    public int getVideoEncorder() {
-        return mVideoEncorder;
+    public int getVideoEncoder() {
+        return mVideoEncoder;
     }
 
     public int getVideoProfile() {
@@ -142,8 +143,8 @@ public class KsyRecordClientConfig {
         return this;
     }
 
-    public KsyRecordClientConfig setmAudioEncorder(int mAudioEncorder) {
-        this.mAudioEncorder = mAudioEncorder;
+    public KsyRecordClientConfig setmAudioEncoder(int mAudioEncoder) {
+        this.mAudioEncoder = mAudioEncoder;
         return this;
     }
 
@@ -167,13 +168,13 @@ public class KsyRecordClientConfig {
         return this;
     }
 
-    public KsyRecordClientConfig setmVideoHeigh(int mVideoHeigh) {
-        this.mVideoHeigh = mVideoHeigh;
+    public KsyRecordClientConfig setmVideoHeight(int mVideoHeight) {
+        this.mVideoHeight = mVideoHeight;
         return this;
     }
 
-    public KsyRecordClientConfig setmVideoEncorder(int mVideoEncorder) {
-        this.mVideoEncorder = mVideoEncorder;
+    public KsyRecordClientConfig setmVideoEncoder(int mVideoEncoder) {
+        this.mVideoEncoder = mVideoEncoder;
         return this;
     }
 
@@ -202,7 +203,7 @@ public class KsyRecordClientConfig {
         } else if (type == MEDIA_TEMP) {
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         }
-        mediaRecorder.setVideoEncoder(mVideoEncorder);
+        mediaRecorder.setVideoEncoder(mVideoEncoder);
         if (mVideoProfile >= 0) {
             int cameraId = -1;
             int numberOfCameras = Camera.getNumberOfCameras();
@@ -232,8 +233,8 @@ public class KsyRecordClientConfig {
         if (mVideoFrameRate > 0) {
 //            mediaRecorder.setCaptureRate(24);
         }
-        if (mVideoWidth > 0 && mVideoHeigh > 0) {
-            mediaRecorder.setVideoSize(mVideoWidth, mVideoHeigh);
+        if (mVideoWidth > 0 && mVideoHeight > 0) {
+            mediaRecorder.setVideoSize(mVideoWidth, mVideoHeight);
         }
     }
 

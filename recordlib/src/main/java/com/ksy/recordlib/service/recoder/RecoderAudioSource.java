@@ -90,7 +90,7 @@ public class RecoderAudioSource extends KsyMediaSource implements MediaRecorder.
         mRecorder.setAudioChannels(2);
         mRecorder.setAudioSamplingRate(mConfig.getAudioSampleRate());
         mRecorder.setAudioEncodingBitRate(mConfig.getAudioBitRate());
-        mRecorder.setAudioEncoder(mConfig.getAudioEncorder());
+        mRecorder.setAudioEncoder(mConfig.getAudioEncoder());
         delay = 1024 * 1000 / mConfig.getAudioSampleRate();
         aac_flag = (byte) 0xAF;
 

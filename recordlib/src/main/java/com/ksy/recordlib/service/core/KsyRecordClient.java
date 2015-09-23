@@ -292,7 +292,7 @@ public class KsyRecordClient implements KsyRecord {
 
         RecoderVideoSource.sync.setForceSyncFlay(true);
         startRecordStep();
-        KsyRecordSender.getRecordInstance().clearData();
+
 
     }
 
