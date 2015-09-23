@@ -142,7 +142,7 @@ public class KsyRecordSender {
             while (!connected) {
                 Thread.sleep(10);
             }
-            if (frame_video > MIN_QUEUE_BUFFER && frame_audio > MIN_QUEUE_BUFFER) {
+            if (frame_video > MIN_QUEUE_BUFFER && frame_audio > MIN_QUEUE_BUFFER || recordPQueue.size() > 10) {
                 KSYFlvData ksyFlv = null;
                 synchronized (mutex) {
                     if (recordPQueue.size() > 0) {
@@ -265,8 +265,7 @@ public class KsyRecordSender {
         if (ksyFlvData.size <= 0) {
             return;
         }
-
-        KsyMediaSource.sync.avDistance = (lastAddAudioTs - lastAddVideoTs);
+        KsyMediaSource.sync.setAvDistance(lastAddAudioTs - lastAddVideoTs);
         // add video data
         synchronized (mutex) {
             if (recordPQueue.size() > MAX_QUEUE_SIZE) {
@@ -326,7 +325,9 @@ public class KsyRecordSender {
     }
 
     public void setRecorderData(String url, int j) {
-        Log.e(TAG, "setRecorderData ..");
+        if (connected) {
+            return;
+        }
         mUrl = URLConverter.convertUrl(url);
         int i = _set_output_url(mUrl);
         Log.e(TAG, "_set_output_url .." + i + " url=" + mUrl);
@@ -359,6 +360,15 @@ public class KsyRecordSender {
             Thread.sleep(1);
             ideaTime = System.currentTimeMillis() - systemStartTime + ideaStartTime;
         }
+    }
+
+    public void clearData() {
+        synchronized (mutex) {
+            recordPQueue.clear();
+            frame_video = 0;
+            frame_audio = 0;
+        }
+        inited = false;
     }
 
     private native int _set_output_url(String url);

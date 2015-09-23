@@ -40,7 +40,6 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
     private final KsyRecordClient.RecordHandler mHandler;
     private final Context mContext;
     private Camera mCamera;
-    private SurfaceView mSurefaceView;
     private MediaRecorder mRecorder;
     private KsyRecordClientConfig mConfig;
     private ParcelFileDescriptor[] piple;
@@ -80,7 +79,6 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
     public RecoderVideoSource(Camera mCamera, KsyRecordClientConfig mConfig, SurfaceView mSurfaceView, KsyRecordClient.RecordHandler mRecordHandler, Context mContext) {
         this.mCamera = mCamera;
         this.mConfig = mConfig;
-        this.mSurefaceView = mSurfaceView;
         mRecorder = new MediaRecorder();
         mHandler = mRecordHandler;
         this.mContext = mContext;
@@ -136,6 +134,12 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
         releaseRecorder();
         releaseCamera();
         sync.clear();
+    }
+
+    public void close() {
+        mRunning = false;
+        releaseRecorder();
+        releaseCamera();
     }
 
     private void releaseCamera() {

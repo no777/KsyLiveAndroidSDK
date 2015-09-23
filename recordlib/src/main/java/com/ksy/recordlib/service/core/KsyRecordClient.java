@@ -24,6 +24,8 @@ import java.util.List;
  * Created by eflakemac on 15/6/17.
  */
 public class KsyRecordClient implements KsyRecord {
+
+    private static final String TAG = "KsyRecordClient";
     private static KsyRecordClient mInstance;
     private RecordHandler mRecordHandler;
     private Context mContext;
@@ -33,7 +35,7 @@ public class KsyRecordClient implements KsyRecord {
     private KSYRtmpFlvClient mKsyRtmpFlvClient;
     private SurfaceView mSurfaceView;
     private TextureView mTextureView;
-    private KsyMediaSource mVideoSource;
+    private RecoderVideoSource mVideoSource;
     private KsyMediaSource mAudioSource;
     private KsyMediaSource mVideoTempSource;
 
@@ -266,6 +268,32 @@ public class KsyRecordClient implements KsyRecord {
             mCamera.release();
             mCamera = null;
         }
+    }
+
+    @Override
+    public void switchCamera() {
+        if (mVideoSource != null) {
+            mVideoSource.close();
+            mVideoSource = null;
+        }
+        if (mVideoTempSource != null) {
+            mVideoTempSource.release();
+            mVideoTempSource = null;
+        }
+        if (mCamera != null) {
+            mCamera.release();
+            mCamera = null;
+        }
+        if (mConfig.getCameraType() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+            mConfig.setmCameraType(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        } else {
+            mConfig.setmCameraType(Camera.CameraInfo.CAMERA_FACING_BACK);
+        }
+
+        RecoderVideoSource.sync.setForceSyncFlay(true);
+        startRecordStep();
+        KsyRecordSender.getRecordInstance().clearData();
+
     }
 
     @Override

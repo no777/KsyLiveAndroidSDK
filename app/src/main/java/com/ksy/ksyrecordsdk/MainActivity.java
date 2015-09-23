@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private static final boolean DEBUG = true;
     private CameraSurfaceView mSurfaceView;
     private FloatingActionButton mFab;
+    private FloatingActionButton change;
     private boolean mRecording = false;
     private KsyRecordClient client;
     private KsyRecordClientConfig config;
@@ -67,6 +68,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 toggleRecord();
+            }
+        });
+        change = (FloatingActionButton) findViewById(R.id.change);
+        change.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changeCamera();
             }
         });
         setupSurfaceView();
@@ -197,6 +205,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             stopRecord();
         }
+    }
+
+    private void changeCamera() {
+        Log.d(Constants.LOG_TAG, "changeCamera===== ");
+        client.switchCamera();
     }
 
     /*

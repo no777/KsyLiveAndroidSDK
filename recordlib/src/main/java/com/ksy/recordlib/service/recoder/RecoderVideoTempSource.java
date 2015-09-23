@@ -31,7 +31,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
     private final KsyRecordClient.RecordHandler mHandler;
     private final Context mContext;
     private Camera mCamera;
-    private SurfaceView mSurefaceView;
     private MediaRecorder mRecorder;
     private KsyRecordClientConfig mConfig;
     private ParcelFileDescriptor[] piple;
@@ -47,7 +46,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
 //        super(mConfig.getUrl(), VIDEO_TEMP);
         this.mCamera = mCamera;
         this.mConfig = mConfig;
-        this.mSurefaceView = mSurfaceView;
         mRecorder = new MediaRecorder();
         mHandler = mRecordHandler;
         this.mContext = mContext;

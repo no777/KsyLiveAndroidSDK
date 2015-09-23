@@ -51,7 +51,8 @@ public class CameraHelper {
                 camearSizeTable.put(cameraType, sizes);
 
             }
-            camera.release();
+            if (camera != null)
+                camera.release();
         }
         return sizes;
     }

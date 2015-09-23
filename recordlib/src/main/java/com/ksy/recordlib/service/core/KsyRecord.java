@@ -17,6 +17,8 @@ public interface KsyRecord {
 
     void release();
 
+    void switchCamera();
+
 //    void setCameraType(int cameraType);
 //
 //    void setVoiceType(int voiceType);

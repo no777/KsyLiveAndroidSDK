@@ -48,6 +48,19 @@
                 app:elevation="6dp"
                 app:pressedTranslationZ="12dp" />
 
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/change"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="76dp"
+                android:src="@mipmap/btn_switch"
+                app:elevation="6dp"
+                app:pressedTranslationZ="12dp" />
+
             <TextView
                 android:id="@+id/bitrate"
                 android:layout_width="wrap_content"

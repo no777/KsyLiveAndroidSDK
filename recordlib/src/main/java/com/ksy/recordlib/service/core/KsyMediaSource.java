@@ -15,7 +15,7 @@ public abstract class KsyMediaSource implements Runnable {
     protected byte[] header = new byte[4];
     protected long ts = 0;
     protected static ClockSync sync = new ClockSync();
-    private static final int MAX_DISTANCE_TIME = 100;
+
 
     public abstract void prepare();
 
@@ -54,14 +54,16 @@ public abstract class KsyMediaSource implements Runnable {
     }
 
     public static class ClockSync {
+        private static final int MAX_DISTANCE_TIME = 100;
         private long frameSumDuration = 0;
         private long frameSumCount = 10000;
         private long lastSysTime = 0;
-        public int avDistance = 0;
+        private int avDistance = 0;
         private boolean inited = false;
         private double lastTS = 0;
         public String lastMessage;
         long average = 0;
+        private boolean forceSyncFlag = false;
 
         public long getTime() {
             long d;
@@ -93,6 +95,19 @@ public abstract class KsyMediaSource implements Runnable {
 
         public void clear() {
             inited = false;
+        }
+
+        public void setAvDistance(int avDistance) {
+            if (forceSyncFlag) {
+                lastTS += avDistance;
+                forceSyncFlag = false;
+            } else {
+                this.avDistance = avDistance;
+            }
+        }
+
+        public void setForceSyncFlay(boolean flag) {
+            this.forceSyncFlag = flag;
         }
     }
 
