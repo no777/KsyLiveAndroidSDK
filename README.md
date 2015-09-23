@@ -1,10 +1,10 @@
 #KSYLiveSDK for Android使用指南
 ---
 ##SDK说明
-KSYLiveSDK for Android(以下简称SDK)是基于RTMP的推流器
+KSYLiveSDK for Android(以下简称SDK)是基于RTMP的推流器.
 
 ###开发环境
-本SDK使用了Android Studio + Gradle的方式进行构建,暂不支持eclipse的方式,目前处于测试阶段,只提供工程项目,日后会发布AAR形式的SKD,并上传Gradle仓库。
+本SDK使用了Android Studio + Gradle的方式进行构建,***一般不提供eclipse的支持***,目前处于测试阶段,只提供工程项目,日后会发布AAR形式的SKD,并上传Gradle仓库。
 目前使用gradle1.2.3构建通过
 
 ###运行环境
@@ -67,6 +67,12 @@ KSYLiveSDK for Android(以下简称SDK)是基于RTMP的推流器
  client.stopRecord();
 ```
 
+- 切换前后摄像头
+```
+ client.switchCamera();
+```
+
 ##已知问题
+- 切换摄像头可能导致一段时间的音视频不同步(avDistance>500ms),一般会在5S以内自动调整.
 - 音视频同步问题,目前使用MediaRecorder的3GPP封装没有timestemp,需要手工编码TS
 ,导致音视频播放时候可能出现帧间隔过大的情况,在某些手机上(Mi2A, Meizu MX4Pro)可能会导致音视频帧间隔改变导致的画面轻微跳动卡顿等,在日后通过优化同步时钟或使用其他封装格式实现.
