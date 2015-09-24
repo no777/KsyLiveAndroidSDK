@@ -142,7 +142,7 @@ public class KsyRecordSender {
             while (!connected) {
                 Thread.sleep(10);
             }
-            if (frame_video > MIN_QUEUE_BUFFER && frame_audio > MIN_QUEUE_BUFFER || recordPQueue.size() > 10) {
+            if (frame_video > MIN_QUEUE_BUFFER && frame_audio > MIN_QUEUE_BUFFER || recordPQueue.size() > 30) {
                 KSYFlvData ksyFlv = null;
                 synchronized (mutex) {
                     if (recordPQueue.size() > 0) {
