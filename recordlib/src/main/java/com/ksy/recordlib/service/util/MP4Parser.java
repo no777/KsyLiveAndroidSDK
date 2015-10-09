@@ -19,15 +19,16 @@
  */
 
 package com.ksy.recordlib.service.util;
+
+import android.util.Base64;
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-
-import android.util.Base64;
-import android.util.Log;
 
 /**
  * Parse an mp4 file.
@@ -36,217 +37,316 @@ import android.util.Log;
  */
 class MP4Parser {
 
-	private static final String TAG = "MP4Parser";
+    private static final String TAG = "MP4Parser";
 
-	private HashMap<String, Long> boxes = new HashMap<String, Long>();
-	private final RandomAccessFile file;
-	private long pos = 0;
+    private HashMap<String, Long> boxes = new HashMap<String, Long>();
+    private final RandomAccessFile file;
+    private long pos = 0;
 
-	public MP4Parser(final String path) throws IOException, FileNotFoundException {
-		this.file = new RandomAccessFile(new File(path), "r");
-	}
+    public MP4Parser(final String path) throws IOException, FileNotFoundException {
+        this.file = new RandomAccessFile(new File(path), "r");
+    }
 
-	/** Parses the mp4 file. **/
-	public void parse() throws IOException {
-		long length = 0;
-		try {
-			length = file.length();
-		} catch (IOException e) {
-			throw new IOException("Wrong size");
-		}
+    /**
+     * Parses the mp4 file.
+     **/
+    public void parse() throws IOException {
+        long length = 0;
+        try {
+            length = file.length();
+        } catch (IOException e) {
+            throw new IOException("Wrong size");
+        }
 
-		try {
-			parse("",length);
-		} catch (IOException e) {
-			throw new IOException("Parse error: malformed mp4 file");
-		}		
-	}
+        try {
+            parse("", length);
+        } catch (IOException e) {
+            throw new IOException("Parse error: malformed mp4 file");
+        }
+    }
 
-	/** Close the file opened when creating the MP4Parser. **/
-	public void close() {
-		try {
-			file.close();
-		} catch (IOException ignore) {}
-	}
+    /**
+     * Close the file opened when creating the MP4Parser.
+     **/
+    public void close() {
+        try {
+            file.close();
+        } catch (IOException ignore) {
+        }
+    }
 
-	public long getBoxPos(String box) throws IOException {
-		Long r = boxes.get(box);
+    public long getBoxPos(String box) throws IOException {
+        Long r = boxes.get(box);
 
-		if (r==null) throw new IOException("Box not found: "+box);
-		return boxes.get(box);
-	}
+        if (r == null) throw new IOException("Box not found: " + box);
+        return boxes.get(box);
+    }
 
-	public StsdBox getStsdBox() throws IOException {
-		try {
-			return new StsdBox(file,getBoxPos("/moov/trak/mdia/minf/stbl/stsd"));
-		} catch (IOException e) {
-			throw new IOException("stsd box could not be found");
-		}
-	}
+    public StsdBox getStsdBox() throws IOException {
+        try {
+            return new StsdBox(file, getBoxPos("/moov/trak/mdia/minf/stbl/stsd"));
+        } catch (IOException e) {
+            throw new IOException("stsd box could not be found");
+        }
+    }
 
-	private void parse(String path, long len) throws IOException {
-		byte[] buffer = new byte[8];
-		String name="";
-		long sum = 0, newlen = 0;
-		if(!path.equals(""))
-			boxes.put(path, pos-8);
+    public TkhdBox getTkhdBox() throws IOException {
+        try {
+            return new TkhdBox(file, getBoxPos("/moov/trak/tkhd"));
+        } catch (IOException e) {
+            throw new IOException("tkhd box could not be found");
+        }
+    }
+
+    private void parse(String path, long len) throws IOException {
+        byte[] buffer = new byte[8];
+        String name = "";
+        long sum = 0, newlen = 0;
+        if (!path.equals(""))
+            boxes.put(path, pos - 8);
 
 
-		while (sum<len) {
+        while (sum < len) {
 
-			file.read(buffer,0,8);
-			sum += 8; 
-			pos += 8;
-			if (validBoxName(buffer)) {
+            file.read(buffer, 0, 8);
+            sum += 8;
+            pos += 8;
+            if (validBoxName(buffer)) {
 
-				ByteBuffer byteBuffer = ByteBuffer.wrap(buffer,0,4);
-				newlen = byteBuffer.getInt()-8;
+                ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, 4);
+                newlen = byteBuffer.getInt() - 8;
 
-				// 1061109559+8 correspond to "????" in ASCII the HTC Desire S seems to write that sometimes, maybe other phones do
-				// "wide" atom would produce a newlen == 0, and we shouldn't throw an exception because of that
-				if (newlen < 0 || newlen == 1061109559) throw new IOException();
-				name = new String(buffer,4,4);
-				Log.d(TAG,"Atom -> name: "+name+" newlen: "+newlen+" pos: "+pos);
-				sum += newlen;
-				parse(path+'/'+name,newlen);
+                // 1061109559+8 correspond to "????" in ASCII the HTC Desire S seems to write that sometimes, maybe other phones do
+                // "wide" atom would produce a newlen == 0, and we shouldn't throw an exception because of that
+                if (newlen < 0 || newlen == 1061109559) throw new IOException();
+                name = new String(buffer, 4, 4);
+                Log.d(TAG, "Atom -> name: " + name + " newlen: " + newlen + " pos: " + pos);
+                sum += newlen;
+                parse(path + '/' + name, newlen);
 
-			}
-			else {
-				if( len < 8){
-					file.seek(file.getFilePointer() - 8 + len);
-					sum += len-8;
-				} else {
-					int skipped = file.skipBytes((int)(len-8));
-					if (skipped < ((int)(len-8))) {
-						throw new IOException();
-					}
-					pos += len-8;
-					sum += len-8;
-				}
-			}
-		}
-	}
+            } else {
+                if (len < 8) {
+                    file.seek(file.getFilePointer() - 8 + len);
+                    sum += len - 8;
+                } else {
+                    int skipped = file.skipBytes((int) (len - 8));
+                    if (skipped < ((int) (len - 8))) {
+                        throw new IOException();
+                    }
+                    pos += len - 8;
+                    sum += len - 8;
+                }
+            }
+        }
+    }
 
-	private boolean validBoxName(byte[] buffer) {
-		for (int i=0;i<4;i++) {
-			// If the next 4 bytes are neither lowercase letters nor numbers
-			if ((buffer[i+4]< 'a' || buffer[i+4]>'z') && (buffer[i+4]<'0'|| buffer[i+4]>'9') ) return false;
-		}
-		return true;
-	}
-	
-	static String toHexString(byte[] buffer,int start, int len) {
-		String c;
-		StringBuilder s = new StringBuilder();
-		for (int i=start;i<start+len;i++) {
-			c = Integer.toHexString(buffer[i]&0xFF);
-			s.append( c.length()<2 ? "0"+c : c );
-		}
-		return s.toString();
-	}
+    private boolean validBoxName(byte[] buffer) {
+        for (int i = 0; i < 4; i++) {
+            // If the next 4 bytes are neither lowercase letters nor numbers
+            if ((buffer[i + 4] < 'a' || buffer[i + 4] > 'z') && (buffer[i + 4] < '0' || buffer[i + 4] > '9'))
+                return false;
+        }
+        return true;
+    }
+
+    static String toHexString(byte[] buffer, int start, int len) {
+        String c;
+        StringBuilder s = new StringBuilder();
+        for (int i = start; i < start + len; i++) {
+            c = Integer.toHexString(buffer[i] & 0xFF);
+            s.append(c.length() < 2 ? "0" + c : c);
+        }
+        return s.toString();
+    }
+
+}
+
+class TkhdBox {
+
+    byte ANGLE_90[] = new byte[]
+            {
+                    0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x01, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    -1, -1, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00
+            };
+
+
+    byte ANGLE_180[] =
+            {
+                    0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    -1, -1, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x01, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00
+            };
+
+
+    byte ANGLE_270[] =
+            {
+                    0x00, 0x00, 0x00, 0x00,
+                    -1, -1, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    -1, -1, 0x00, 0x00
+            };
+
+    private RandomAccessFile fis;
+    private byte[] buffer = new byte[4];
+    private long pos = 0;
+    private int angle = 0;
+
+    private byte[] matrix;
+
+    /**
+     * Parse the sdsd box in an mp4 file
+     * fis: proper mp4 file
+     * pos: stsd box's position in the file
+     */
+    public TkhdBox(RandomAccessFile fis, long pos) {
+        this.fis = fis;
+        this.pos = pos;
+        findMatrix();
+    }
+
+    public int getAngle() {
+        if (compareMatrix(matrix, ANGLE_90)) {
+            angle = 90;
+        } else if (compareMatrix(matrix, ANGLE_180)) {
+            angle = 180;
+        } else if (compareMatrix(matrix, ANGLE_270)) {
+            angle = 270;
+        } else {
+            angle = 0;
+        }
+
+        return angle;
+    }
+
+    private boolean compareMatrix(byte[] a, byte[] b) {
+        if (a == null || b == null || (a.length != b.length)) {
+            return false;
+        }
+        int aLenght = 0;
+        for (byte aItem : a) {
+            if (b[aLenght] != aItem) {
+                return false;
+            }
+            aLenght++;
+        }
+        return true;
+    }
+
+    private boolean findMatrix() {
+        try {
+            byte[] head = new byte[8];
+            fis.seek(pos);
+            fis.read(head, 0, 8);
+            StringBuilder builder = new StringBuilder();
+            for (byte matrixItem : head
+                    ) {
+                builder.append(" ");
+                builder.append(matrixItem);
+            }
+            Log.e("MP4Parser", pos + " head= " + head.toString());
+            fis.skipBytes(36);
+            matrix = new byte[24];
+            fis.read(matrix, 0, 24);
+            // Here we extract the PPS parameter
+            builder = new StringBuilder();
+            for (byte matrixItem : matrix
+                    ) {
+                builder.append(" ");
+                builder.append(matrixItem);
+            }
+            Log.e("MP4Parser", pos + " matrixItem=" + builder.toString());
+
+        } catch (IOException e) {
+            return false;
+        }
+
+        return true;
+    }
 
 }
 
 class StsdBox {
 
-	private RandomAccessFile fis;
-	private byte[] buffer = new byte[4];
-	private long pos = 0;
+    private RandomAccessFile fis;
+    private byte[] buffer = new byte[4];
+    private long pos = 0;
 
-	private byte[] pps;
-	private byte[] sps;
-	private int spsLength, ppsLength;
+    private byte[] pps;
+    private byte[] sps;
+    private int spsLength, ppsLength;
 
-	/** Parse the sdsd box in an mp4 file
-	 * fis: proper mp4 file
-	 * pos: stsd box's position in the file
-	 */
-	public StsdBox (RandomAccessFile fis, long pos) {
+    /**
+     * Parse the sdsd box in an mp4 file
+     * fis: proper mp4 file
+     * pos: stsd box's position in the file
+     */
+    public StsdBox(RandomAccessFile fis, long pos) {
 
-		this.fis = fis;
-		this.pos = pos;
+        this.fis = fis;
+        this.pos = pos;
 
-		findBoxAvcc();
-		findSPSandPPS();
+        findBoxAvcc();
+        findSPSandPPS();
 
-	}
+    }
 
-	public String getProfileLevel() {
-		return MP4Parser.toHexString(sps,1,3);
-	}
+    public String getProfileLevel() {
+        return MP4Parser.toHexString(sps, 1, 3);
+    }
 
-	public String getB64PPS() {
-		return Base64.encodeToString(pps, 0, ppsLength, Base64.NO_WRAP);
-	}
+    public String getB64PPS() {
+        return Base64.encodeToString(pps, 0, ppsLength, Base64.NO_WRAP);
+    }
 
-	public String getB64SPS() {
-		return Base64.encodeToString(sps, 0, spsLength, Base64.NO_WRAP);
-	}
+    public String getB64SPS() {
+        return Base64.encodeToString(sps, 0, spsLength, Base64.NO_WRAP);
+    }
 
-	private boolean findSPSandPPS() {
-		/*
-		 *  SPS and PPS parameters are stored in the avcC box
-		 *  You may find really useful information about this box 
-		 *  in the document ISO-IEC 14496-15, part 5.2.4.1.1
-		 *  The box's structure is described there
-		 *  
-		 *  aligned(8) class AVCDecoderConfigurationRecord {
-		 *		unsigned int(8) configurationVersion = 1;
-		 *		unsigned int(8) AVCProfileIndication;
-		 *		unsigned int(8) profile_compatibility;
-		 *		unsigned int(8) AVCLevelIndication;
-		 *		bit(6) reserved = ‘111111’b;
-		 *		unsigned int(2) lengthSizeMinusOne;
-		 *		bit(3) reserved = ‘111’b;
-		 *		unsigned int(5) numOfSequenceParameterSets;
-		 *		for (i=0; i< numOfSequenceParameterSets; i++) {
-		 *			unsigned int(16) sequenceParameterSetLength ;
-		 *			bit(8*sequenceParameterSetLength) sequenceParameterSetNALUnit;
-		 *		}
-		 *		unsigned int(8) numOfPictureParameterSets;
-		 *		for (i=0; i< numOfPictureParameterSets; i++) {
-		 *			unsigned int(16) pictureParameterSetLength;
-		 *			bit(8*pictureParameterSetLength) pictureParameterSetNALUnit;
-		 *		}
-		 *	}
-		 *
-		 *  
-		 *  
-		 */
-		try {
+    private boolean findSPSandPPS() {
 
-			// TODO: Here we assume that numOfSequenceParameterSets = 1, numOfPictureParameterSets = 1 !
-			// Here we extract the SPS parameter
-			fis.skipBytes(7);
-			spsLength  = 0xFF&fis.readByte();
-			sps = new byte[spsLength];
-			fis.read(sps,0,spsLength);
-			// Here we extract the PPS parameter
-			fis.skipBytes(2);
-			ppsLength = 0xFF&fis.readByte();
-			pps = new byte[ppsLength];
-			fis.read(pps,0,ppsLength);
+        try {
 
-		} catch (IOException e) {
-			return false;
-		}
+            // TODO: Here we assume that numOfSequenceParameterSets = 1, numOfPictureParameterSets = 1 !
+            // Here we extract the SPS parameter
+            fis.skipBytes(7);
+            spsLength = 0xFF & fis.readByte();
+            sps = new byte[spsLength];
+            fis.read(sps, 0, spsLength);
+            // Here we extract the PPS parameter
+            fis.skipBytes(2);
+            ppsLength = 0xFF & fis.readByte();
+            pps = new byte[ppsLength];
+            fis.read(pps, 0, ppsLength);
 
-		return true;
-	}
+        } catch (IOException e) {
+            return false;
+        }
 
-	private boolean findBoxAvcc() {
-		try {
-			fis.seek(pos+8);
-			while (true) {
-				while (fis.read() != 'a');
-				fis.read(buffer,0,3);
-				if (buffer[0] == 'v' && buffer[1] == 'c' && buffer[2] == 'C') break;
-			}
-		} catch (IOException e) {
-			return false;
-		}
-		return true;
+        return true;
+    }
 
-	}
+    private boolean findBoxAvcc() {
+        try {
+            fis.seek(pos + 8);
+            while (true) {
+                while (fis.read() != 'a') ;
+                fis.read(buffer, 0, 3);
+                if (buffer[0] == 'v' && buffer[1] == 'c' && buffer[2] == 'C') break;
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+
+    }
 
 }

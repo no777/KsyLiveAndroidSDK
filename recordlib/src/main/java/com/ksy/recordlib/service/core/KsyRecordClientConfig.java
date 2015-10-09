@@ -5,7 +5,9 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 
 import com.ksy.recordlib.service.exception.KsyRecordException;
+import com.ksy.recordlib.service.util.CameraUtil;
 import com.ksy.recordlib.service.util.Constants;
+import com.ksy.recordlib.service.util.OrientationActivity;
 
 /**
  * Created by eflakemac on 15/6/17.
@@ -28,8 +30,16 @@ public class KsyRecordClientConfig {
     int mVideoEncoder;
     int mVideoProfile;
     int cameraOriention;
+    public static int recordOrientation;
+    public static int previewOrientation;
 
     String mUrl;
+
+    OrientationActivity orientationActivity;
+
+    public int getRecordOrientation() {
+        return recordOrientation;
+    }
 
     public KsyRecordClientConfig(Builder builder) {
         mCameraType = builder.mCameraType;
@@ -193,6 +203,11 @@ public class KsyRecordClientConfig {
         return true;
     }
 
+    public KsyRecordClientConfig setOrientationActivity(OrientationActivity orientationActivity) {
+        this.orientationActivity = orientationActivity;
+        return this;
+    }
+
     public void configMediaRecorder(MediaRecorder mediaRecorder, int type) {
         if (mediaRecorder == null) {
             throw new IllegalArgumentException("mediaRecorder is null");
@@ -204,8 +219,9 @@ public class KsyRecordClientConfig {
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         }
         mediaRecorder.setVideoEncoder(mVideoEncoder);
+        int cameraId = -1;
         if (mVideoProfile >= 0) {
-            int cameraId = -1;
+
             int numberOfCameras = Camera.getNumberOfCameras();
             if (numberOfCameras > 0) {
                 Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
@@ -236,6 +252,9 @@ public class KsyRecordClientConfig {
         if (mVideoWidth > 0 && mVideoHeight > 0) {
             mediaRecorder.setVideoSize(mVideoWidth, mVideoHeight);
         }
+        int previewDegree = CameraUtil.getDisplayOrientation(orientationActivity.getActivity(), cameraId, mCameraType == Camera.CameraInfo.CAMERA_FACING_FRONT);
+        recordOrientation = CameraUtil.getMediaRecordRotation(previewDegree, orientationActivity.getOrientation(), mCameraType == Camera.CameraInfo.CAMERA_FACING_FRONT);
+        mediaRecorder.setOrientationHint(recordOrientation);
     }
 
     public static class Builder {
@@ -245,7 +264,7 @@ public class KsyRecordClientConfig {
         private int mAudioBitRate = Constants.CONFIG_AUDIO_BITRATE_32K;
         private int mAudioEncorder = MediaRecorder.AudioEncoder.AAC;
         private int mVideoFrameRate = Constants.CONFIG_VIDEO_FRAME_RATE_30;
-        private int mVideoBitRate = Constants.CONFIG_VIDEO_BITRATE_750K;
+        private int mVideoBitRate = Constants.CONFIG_VIDEO_BITRATE_500K;
         private int mDropFrameFrequency = 0;
         private int mVideoWidth;
         private int mVideoHeigh;

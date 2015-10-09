@@ -16,4 +16,5 @@
     <string name="choose">ok</string>
     <string name="Url">url</string>
     <string name="github">github</string>
+    <string name="rtmp_default">rtmp://uplive.ksyun.com/live/1234</string>
 </resources>

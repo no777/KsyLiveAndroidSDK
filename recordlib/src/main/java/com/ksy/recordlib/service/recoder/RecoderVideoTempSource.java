@@ -95,7 +95,7 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
             MP4Config config = new MP4Config(path);
             // Delete dummy video
             File file = new File(path);
-            if (!file.delete()) Log.e(Constants.LOG_TAG, "Temp file could not be erased");
+//            if (!file.delete()) Log.e(Constants.LOG_TAG, "Temp file could not be erased");
             Log.d(Constants.LOG_TAG, "ProfileLevel = " + config.getProfileLevel() + ",B64SPS = " + config.getB64SPS() + ",B64PPS = " + config.getB64PPS());
             PrefUtil.saveMp4Config(mContext, config);
         } catch (IOException e) {

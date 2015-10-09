@@ -9,6 +9,8 @@ import android.net.NetworkInfo;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.ksy.recordlib.service.core.KsyRecordClient;
+
 /**
  * Created by hansentian on 8/3/15.
  */
@@ -80,4 +82,5 @@ public class NetworkMonitor {
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
         }
     }
+
 }

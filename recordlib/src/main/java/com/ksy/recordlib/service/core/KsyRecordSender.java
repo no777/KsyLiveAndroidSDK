@@ -116,7 +116,7 @@ public class KsyRecordSender {
         return "currentTransferVideoBr=" + currentVideoBitrate +
                 ", currentTransferAudiobr:" + currentAudioBitrate +
                 "\n,vFps =" + vidoeFps.getSpeed() + " aFps=" + audioFps.getSpeed() + " dropA:" + dropAudioCount + " dropV" + dropVideoCount +
-                "\n, lastSendAudioTs:" + lastSendAudioTs + "stAvDist=" + (lastSendAudioTs - lastSendVideoDts) + ",size=" + recordPQueue.size() + "\nf_v=" + frame_video + " f_a=" + frame_audio + "\n" + KsyMediaSource.sync.lastMessage;
+                "\n, lastStAudioTs:" + lastSendAudioTs + "stAvDist=" + (lastSendAudioTs - lastSendVideoDts) + ",size=" + recordPQueue.size() + "\nf_v=" + frame_video + " f_a=" + frame_audio + "\n" + KsyMediaSource.sync.lastMessage;
     }
 
     public void start(Context pContext) throws IOException {
@@ -165,6 +165,7 @@ public class KsyRecordSender {
                 } else {
                     lastRefreshTime = System.currentTimeMillis();
                     waiting(ksyFlv);
+//                    Log.e(TAG, "ksyFlv ts=" + ksyFlv.dts + " size=" + ksyFlv.size + " type=" + (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==a==" : "**V**"));
                     int w = _write(ksyFlv.byteBuffer, ksyFlv.byteBuffer.length);
                     statBitrate(w, ksyFlv.type);
                 }
@@ -286,6 +287,7 @@ public class KsyRecordSender {
                 lastAddAudioTs = ksyFlvData.dts;
             }
         }
+//        Log.e(TAG, "add to QUEUE ts=" + ksyFlvData.dts + " size=" + ksyFlvData.size + " type=" + (ksyFlvData.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==a==" : "**V**"));
     }
 
 
@@ -357,6 +359,7 @@ public class KsyRecordSender {
             return;
         }
         while (ts > ideaTime) {
+            Log.e(TAG, "waiting .." + " ts=" + ts + " ideaTime=" + ideaTime);
             Thread.sleep(1);
             ideaTime = System.currentTimeMillis() - systemStartTime + ideaStartTime;
         }

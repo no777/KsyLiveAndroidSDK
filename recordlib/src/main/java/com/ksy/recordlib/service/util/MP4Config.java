@@ -19,83 +19,90 @@
  */
 
 package com.ksy.recordlib.service.util;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import android.util.Base64;
 import android.util.Log;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
  * Finds SPS & PPS parameters in mp4 file.
  */
 public class MP4Config {
 
-	public final static String TAG = "MP4Config";
-	
-	private MP4Parser mp4Parser;
-	private String mProfilLevel, mPPS, mSPS;
+    public final static String TAG = "MP4Config";
 
-	public MP4Config(String profil, String sps, String pps) {
-		mProfilLevel = profil; 
-		mPPS = pps; 
-		mSPS = sps;
-	}
+    private MP4Parser mp4Parser;
+    private String mProfilLevel, mPPS, mSPS;
+    private int angle = 0;
 
-	public MP4Config(String sps, String pps) {
-		mPPS = pps;
-		mSPS = sps;
-		mProfilLevel = MP4Parser.toHexString(Base64.decode(sps, Base64.NO_WRAP),1,3);
-	}	
-	
-	public MP4Config(byte[] sps, byte[] pps) {
-		mPPS = Base64.encodeToString(pps, 0, pps.length, Base64.NO_WRAP);
-		mSPS = Base64.encodeToString(sps, 0, sps.length, Base64.NO_WRAP);
-		mProfilLevel = MP4Parser.toHexString(sps,1,3);
-	}
-	
-	/**
-	 * Finds sps & pps parameters inside a .mp4.
-	 * @param path Path to the file to analyze
-	 * @throws IOException
-	 * @throws FileNotFoundException
-	 */
-	public MP4Config (String path) throws IOException, FileNotFoundException {
+    public MP4Config(String profil, String sps, String pps) {
+        mProfilLevel = profil;
+        mPPS = pps;
+        mSPS = sps;
+    }
 
-		StsdBox stsdBox; 
-		
-		// We open the mp4 file
-		mp4Parser = new MP4Parser(path);
+    public MP4Config(String sps, String pps) {
+        mPPS = pps;
+        mSPS = sps;
+        mProfilLevel = MP4Parser.toHexString(Base64.decode(sps, Base64.NO_WRAP), 1, 3);
+    }
 
-		// We parse it
-		try {
-			mp4Parser.parse();
-		} catch (IOException ignore) {
-			// Maybe enough of the file has been parsed and we can get the stsd box
-		}
+    public MP4Config(byte[] sps, byte[] pps) {
+        mPPS = Base64.encodeToString(pps, 0, pps.length, Base64.NO_WRAP);
+        mSPS = Base64.encodeToString(sps, 0, sps.length, Base64.NO_WRAP);
+        mProfilLevel = MP4Parser.toHexString(sps, 1, 3);
+    }
 
-		// We find the stsdBox
-		stsdBox = mp4Parser.getStsdBox();
-		mPPS = stsdBox.getB64PPS();
-		mSPS = stsdBox.getB64SPS();
-		mProfilLevel = stsdBox.getProfileLevel();
-		
-		// We're done !
-		mp4Parser.close();
+    /**
+     * Finds sps & pps parameters inside a .mp4.
+     *
+     * @param path Path to the file to analyze
+     * @throws IOException
+     * @throws FileNotFoundException
+     */
+    public MP4Config(String path) throws IOException, FileNotFoundException {
+        Log.e(TAG, "path " + path);
+        StsdBox stsdBox;
+        TkhdBox tkhdBox;
 
-	}
+        // We open the mp4 file
+        mp4Parser = new MP4Parser(path);
 
-	public String getProfileLevel() {
-		return mProfilLevel;
-	}
+        // We parse it
+        try {
+            mp4Parser.parse();
+        } catch (IOException ignore) {
+            // Maybe enough of the file has been parsed and we can get the stsd box
+        }
 
-	public String getB64PPS() {
-		Log.d(TAG, "PPS: "+mPPS);
-		return mPPS;
-	}
+        // We find the stsdBox
+        stsdBox = mp4Parser.getStsdBox();
+        mPPS = stsdBox.getB64PPS();
+        mSPS = stsdBox.getB64SPS();
+        mProfilLevel = stsdBox.getProfileLevel();
 
-	public String getB64SPS() {
-		Log.d(TAG, "SPS: "+mSPS);
-		return mSPS;
-	}
+
+        tkhdBox = mp4Parser.getTkhdBox();
+        angle = tkhdBox.getAngle();
+        Log.e("MP4Config", "angle=" + angle);
+        mp4Parser.close();
+
+    }
+
+    public String getProfileLevel() {
+        return mProfilLevel;
+    }
+
+    public String getB64PPS() {
+        Log.d(TAG, "PPS: " + mPPS);
+        return mPPS;
+    }
+
+    public String getB64SPS() {
+        Log.d(TAG, "SPS: " + mSPS);
+        return mSPS;
+    }
 
 }

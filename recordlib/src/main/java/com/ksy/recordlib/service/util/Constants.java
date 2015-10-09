@@ -5,11 +5,16 @@ package com.ksy.recordlib.service.util;
  */
 public class Constants {
     public static final String LOG_TAG = "ksy-record-sdk";
+    public static final String LOG_TAG_EF = "eflake";
     // Voice Encode Default
 //    public static final String URL_DEFAULT = "rtmp://xiaoyi.uplive.ksyun.com:80/live/hansen2?public=1&expire=1710333230&nonce=12341234&accesskey=2HITWMQXL2VBB3XMAEHQ&signature=1wgD2F56CDUizTp0%2fj3DJ%2fasSsY%3d";
 //    public static final String URL_DEFAULT = "rtmp://115.231.96.121:80/live/hansen223?public=1&expire=1710333230&nonce=12341234&accesskey=2HITWMQXL2VBB3XMAEHQ&signature=1wgD2F56CDUizTp0%2fj3DJ%2fasSsY%3d";
-    public static final String URL_DEFAULT = "rtmp://180.76.140.24/live/eflake2";
+//    public static final String URL_DEFAULT = "rtmp://180.76.140.24/live/eflaketest";
+    public static final String URL_DEFAULT = "rtmp://uplive.ksyun.com/live/eflake";
+//        public static final String URL_DEFAULT = "rtmp://rtmpup2.plu.cn/longzhu/55fd569ffb16df2b9300106f?key=dcc3e4f5fff141ac9907ba984b76e777144293261214430070";
     public static final int ENCODE_MODE_MEDIA_RECORDER = 0;
+//    public static final String URL_DEFAULT = "rtmp://send1a.douyutv.com/live/415362rtlOWU5sbx?wsSecret=590fa06affbd1bf370733d5cf6409c07&wsTime=5608ee0c";
+
     public static final int ENCODE_MODE_MEDIA_CODEC = 1;
     public static final int ENCODE_MODE_WEBRTC = 2;
     public static final int DISPLAY_SURFACE_VIEW = 0;

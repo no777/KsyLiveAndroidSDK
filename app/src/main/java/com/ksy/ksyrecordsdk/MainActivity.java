@@ -1,7 +1,11 @@
 package com.ksy.ksyrecordsdk;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.net.Uri;
 import android.os.Build;
@@ -12,14 +16,17 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.heinrichreimersoftware.materialdrawer.DrawerView;
 import com.heinrichreimersoftware.materialdrawer.structure.DrawerItem;
@@ -29,11 +36,13 @@ import com.ksy.recordlib.service.core.KsyRecordClientConfig;
 import com.ksy.recordlib.service.core.KsyRecordSender;
 import com.ksy.recordlib.service.exception.KsyRecordException;
 import com.ksy.recordlib.service.util.Constants;
+import com.ksy.recordlib.service.util.OrientationActivity;
+import com.ksy.recordlib.service.util.OrientationObserver;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OrientationActivity, KsyRecordClient.NetworkChangeListener {
 
     private static final boolean DEBUG = true;
     private CameraSurfaceView mSurfaceView;
@@ -49,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
     private DrawerView drawer;
     private ActionBarDrawerToggle drawerToggle;
 
+    private int orientation = 0;
+    private OrientationObserver orientationObserver;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +69,34 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initWidget();
         setupRecord();
+        initOrientationSensor();
+    }
+
+    public void onResume() {
+        super.onResume();
+        if (orientationObserver.canDetectOrientation()) {
+            orientationObserver.enable();
+        }
+        // for enable network monitor
+        client.registerNetworkMonitor();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        orientationObserver.disable();
+        // for disable network monitor
+        client.unregisterNetworkMonitor();
+    }
+
+    private void initOrientationSensor() {
+        orientationObserver = new OrientationObserver(this) {
+            @Override
+            public void onOrientationChangedEvent(int orientation) {
+                MainActivity.this.orientation = (((orientation + 45) / 90) * 90) % 360;
+                Log.e("MainActivity", "orientation=" + orientation);
+            }
+        };
     }
 
     private void initWidget() {
@@ -92,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                     bitrate.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            bitrate.setText(KsyRecordSender.getRecordInstance().getAVBitrate());
+                            bitrate.setText(KsyRecordSender.getRecordInstance().getAVBitrate() + "record angle =" + KsyRecordClientConfig.recordOrientation + ",preview angel =" + KsyRecordClientConfig.previewOrientation);
                         }
                     }, 1000);
                 }
@@ -120,6 +161,10 @@ public class MainActivity extends AppCompatActivity {
                 invalidateOptionsMenu();
             }
         };
+        final View dialogView = LayoutInflater.from(this).inflate(
+                R.layout.dialog_input, null);
+        final EditText editInput = (EditText) dialogView
+                .findViewById(R.id.input);
         adapter = new DrawerItemConfigAdapter();
         adapter.setConfig(config);
         adapter.setContext(this);
@@ -130,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         drawer.setOnItemClickListener(new DrawerItem.OnItemClickListener() {
             @Override
             public void onClick(final DrawerItem drawerItem, long l, final int position) {
-//                if (position == Constants.SETTING_URL) {
+                if (position == Constants.SETTING_URL) {
 //                    new AlertDialog.Builder(MainActivity.this)
 //                            .setTitle(R.string.Url)
 //                            .set(InputType.TYPE_CLASS_TEXT)
@@ -141,7 +186,25 @@ public class MainActivity extends AppCompatActivity {
 //                                    drawerItem.setTextSecondary(input.toString());
 //                                }
 //                            }).show();
-//                } else {//                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    new AlertDialog.Builder(MainActivity.this).setTitle("User Input")
+                            .setView(dialogView)
+                            .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    config.setmUrl(editInput.getText().toString());
+                                    drawerItem.setTextSecondary(editInput.getText().toString());
+
+                                }
+                            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    }).show();
+                }
+// else {//                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 //                    builder.itemsCallbackSingleChoice(-1, new AlertDialog.ListCallbackSingleChoice() {
 //                        @Override
 //                        public boolean onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
@@ -162,6 +225,7 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         KsyRecordClientConfig.Builder builder = new KsyRecordClientConfig.Builder();
         builder.setVideoProfile(CamcorderProfile.QUALITY_480P).setUrl(Constants.URL_DEFAULT);
+        builder.setCameraType(Camera.CameraInfo.CAMERA_FACING_BACK);
         config = builder.build();
     }
 
@@ -178,6 +242,9 @@ public class MainActivity extends AppCompatActivity {
         client = KsyRecordClient.getInstance(getApplicationContext());
         client.setConfig(config);
         client.setDisplayPreview(mSurfaceView);
+        client.setCameraSizeChangedListener(mSurfaceView);
+        client.setOrientationActivity(this);
+        client.setNetworkChangeListener(this);
     }
 
 
@@ -207,9 +274,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // TODO swith camera here
     private void changeCamera() {
         Log.d(Constants.LOG_TAG, "changeCamera===== ");
         client.switchCamera();
+//        config.setmCameraType(Camera.CameraInfo.CAMERA_FACING_FRONT);
     }
 
     /*
@@ -231,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         drawerToggle.onConfigurationChanged(newConfig);
+
     }
 
 
@@ -260,5 +330,20 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public int getOrientation() {
+        return orientation;
+    }
+
+    @Override
+    public Activity getActivity() {
+        return this;
+    }
+
+    @Override
+    public void onNetworkChanged(int state) {
+        Toast.makeText(MainActivity.this, "onNetworkChanged :" + state, Toast.LENGTH_SHORT).show();
     }
 }
