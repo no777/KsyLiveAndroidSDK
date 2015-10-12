@@ -359,7 +359,6 @@ public class KsyRecordSender {
             return;
         }
         while (ts > ideaTime) {
-            Log.e(TAG, "waiting .." + " ts=" + ts + " ideaTime=" + ideaTime);
             Thread.sleep(1);
             ideaTime = System.currentTimeMillis() - systemStartTime + ideaStartTime;
         }

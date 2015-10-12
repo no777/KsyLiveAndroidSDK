@@ -72,7 +72,7 @@
                 android:layout_margin="16dp"
                 android:text="bitrate"
                 android:textColor="@color/error_color"
-                android:textSize="15dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
     </LinearLayout>
 
