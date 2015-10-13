@@ -335,6 +335,7 @@ public class KsyRecordSender {
         recordPQueue.clear();
         frame_video = 0;
         frame_audio = 0;
+        connected = false;
         LocalBroadcastManager.getInstance(mContext).unregisterReceiver(receiver);
     }
 
@@ -371,7 +372,7 @@ public class KsyRecordSender {
             return;
         }
         while (ts > ideaTime) {
-            Log.e(TAG, "waiting .." + " ts=" + ts + " ideaTime=" + ideaTime);
+//            Log.e(TAG, "waiting .." + " ts=" + ts + " ideaTime=" + ideaTime);
             Thread.sleep(1);
             ideaTime = System.currentTimeMillis() - systemStartTime + ideaStartTime;
         }

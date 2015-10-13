@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
             @Override
             public void onOrientationChangedEvent(int orientation) {
                 MainActivity.this.orientation = (((orientation + 45) / 90) * 90) % 360;
-                Log.e("MainActivity", "orientation=" + orientation);
+//                Log.e("MainActivity", "orientation=" + orientation);
             }
         };
     }

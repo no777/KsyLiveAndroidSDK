@@ -178,7 +178,7 @@ public class RecoderAudioSource extends KsyMediaSource implements MediaRecorder.
             int sfi = (header_buffer_rest[0] & (byte) 0x3c) >> 2;
             int ch = ((header_buffer_rest[0] & (byte) 0x01) << 6) | ((header_buffer_rest[1] & (byte) 0xc0) >> 6);
             int x = (((profile + 1) & 0x1f) << 11) | ((sfi & 0x0f) << 7) | ((ch & 0x0f) << 3);
-            Log.e("RecoderVideoSource", "length =" + length);
+//            Log.e("RecoderVideoSource", "length =" + length);
             special_content = intToByteArrayTwoByte(x);
             int frame_length = length - header_size;
             byte[] frame_content = new byte[frame_length];
