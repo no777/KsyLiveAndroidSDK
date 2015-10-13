@@ -19,6 +19,7 @@ import java.util.PriorityQueue;
  * Created by eflakemac on 15/6/26.
  */
 public class KsyRecordSender {
+    public static final int MAX_SEND_FAIL_CONUT = 5;
     //	@AccessedByNative
     public long mNativeRTMP;
 
@@ -99,6 +100,8 @@ public class KsyRecordSender {
     }
 
     public boolean needResetTs = false;
+    private int mFailedSendCount;
+    private KsyRecordClient.RecordHandler recordHandler;
 
     private KsyRecordSender() {
         recordPQueue = new PriorityQueue<>(10, new Comparator<KSYFlvData>() {
@@ -169,6 +172,17 @@ public class KsyRecordSender {
                     waiting(ksyFlv);
 //                    Log.e(TAG, "ksyFlv ts=" + ksyFlv.dts + " size=" + ksyFlv.size + " type=" + (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==a==" : "**V**"));
                     int w = _write(ksyFlv.byteBuffer, ksyFlv.byteBuffer.length);
+                    Log.d(Constants.LOG_TAG_EF, "count = " + w);
+//                    if (w <= 0) {
+//                        mFailedSendCount++;
+//                        Log.d(Constants.LOG_TAG_EF, "mFailedSendCount = " + mFailedSendCount);
+//                        if (mFailedSendCount >= MAX_SEND_FAIL_CONUT) {
+//                            if (recordHandler != null) {
+//                                recordHandler.sendEmptyMessage(Constants.MESSAGE_SENDER_PUSH_FAILED);
+//                                mFailedSendCount = 0;
+//                            }
+//                        }
+//                    }
                     statBitrate(w, ksyFlv.type);
                 }
             }
@@ -228,6 +242,8 @@ public class KsyRecordSender {
         if (sent == -1) {
             connected = false;
             Log.e(TAG, "statBitrate send frame failed!");
+            recordHandler.sendEmptyMessage(Constants.MESSAGE_SENDER_PUSH_FAILED);
+
         } else {
             Log.d(TAG, "statBitrate send successful sent =" + sent + "type= " + type);
             long time = System.currentTimeMillis() - lastRefreshTime;
@@ -350,7 +366,7 @@ public class KsyRecordSender {
         if (j == FIRST_OPEN) {
             int k = _open();
             connected = k == 0;
-            Log.e(TAG, "connected .. open result=" + k);
+            Log.e(Constants.LOG_TAG_EF, "connected .. open result=" + k);
         }
     }
 
@@ -394,6 +410,10 @@ public class KsyRecordSender {
     private native int _close();
 
     private native int _write(byte[] buffer, int size);
+
+    public void setStateMonitor(KsyRecordClient.RecordHandler recordHandler) {
+        this.recordHandler = recordHandler;
+    }
 
 
     public static class Speedometer {

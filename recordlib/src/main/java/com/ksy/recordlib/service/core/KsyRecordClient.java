@@ -56,6 +56,7 @@ public class KsyRecordClient implements KsyRecord {
     private int currentCameraId;
     private CameraSizeChangeListener mCameraSizeChangedListener;
     private NetworkChangeListener mNetworkChangeListener;
+    private PushStreamStateListener mPushStreamStateListener;
     public static final int NETWORK_UNAVAILABLE = -1;
     public static final int NETWORK_WIFI = 1;
     public static final int NETWORK_MOBILE = 0;
@@ -74,6 +75,10 @@ public class KsyRecordClient implements KsyRecord {
         void onNetworkChanged(int state);
     }
 
+    public interface PushStreamStateListener {
+        void onPushStreamState(int state);
+    }
+
     private KsyRecordClient() {
     }
 
@@ -81,6 +86,7 @@ public class KsyRecordClient implements KsyRecord {
         this.mContext = context;
         mRecordHandler = new RecordHandler();
         ksyRecordSender = KsyRecordSender.getRecordInstance();
+        ksyRecordSender.setStateMonitor(mRecordHandler);
         // Remove old network monitor
         // NetworkMonitor.start(context);
     }
@@ -150,10 +156,14 @@ public class KsyRecordClient implements KsyRecord {
         this.mNetworkChangeListener = listener;
     }
 
+    public void setPushStreamStateListener(PushStreamStateListener mPushStreamStateListener) {
+        this.mPushStreamStateListener = mPushStreamStateListener;
+    }
+
     /*
-        *
-        * Ks3 Record API
-        * */
+            *
+            * Ks3 Record API
+            * */
     @Override
     public void startRecord() throws KsyRecordException {
         if (clientState == STATE.RECORDING) {
@@ -431,6 +441,12 @@ public class KsyRecordClient implements KsyRecord {
                     startRecordStep();
                     break;
                 case Constants.MESSAGE_MP4CONFIG_START_PREVIEW:
+                    break;
+                case Constants.MESSAGE_SENDER_PUSH_FAILED:
+                    Log.d(Constants.LOG_TAG_EF, "server send push fail");
+                    if (mPushStreamStateListener != null) {
+                        mPushStreamStateListener.onPushStreamState(Constants.PUSH_STATE_FAILED);
+                    }
                     break;
                 default:
                     break;
