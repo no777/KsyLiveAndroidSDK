@@ -297,7 +297,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
             if (length > mConfig.getVideoBitRate() * 5 || length < 0) {
                 return;
             }
-            Log.d(Constants.LOG_TAG, "header length = " + length + "content length");
+            Log.d(Constants.LOG_TAG, "header length size = " + length + "content length");
             content.clear();
             int contentLength = readIntoBuffer(content, length);
             Log.d(Constants.LOG_TAG, "header length = " + length + "content length" + contentLength);
