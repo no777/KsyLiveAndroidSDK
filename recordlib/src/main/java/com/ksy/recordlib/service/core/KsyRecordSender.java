@@ -98,6 +98,8 @@ public class KsyRecordSender {
         Log.i(Constants.LOG_TAG, "ksyrtmp.so loaded");
     }
 
+    public boolean needResetTs = false;
+
     private KsyRecordSender() {
         recordPQueue = new PriorityQueue<>(10, new Comparator<KSYFlvData>() {
             @Override
@@ -276,8 +278,17 @@ public class KsyRecordSender {
                     frame_audio--;
                 }
             }
-            recordPQueue.add(ksyFlvData);
+
             if (k == FROM_VIDEO) { //视频数据
+                if (needResetTs) {
+                    KsyMediaSource.sync.resetTs(lastAddAudioTs);
+                    Log.d(Constants.LOG_TAG, "lastAddAudioTs = " + lastAddAudioTs);
+                    Log.d(Constants.LOG_TAG, "lastAddVideoTs = " + lastAddVideoTs);
+                    Log.d(Constants.LOG_TAG, "ksyFlvData.dts = " + ksyFlvData.dts);
+                    needResetTs = false;
+                    lastAddVideoTs = lastAddAudioTs;
+                    ksyFlvData.dts = lastAddVideoTs;
+                }
                 vidoeFps.tickTock();
                 frame_video++;
                 lastAddVideoTs = ksyFlvData.dts;
@@ -286,6 +297,7 @@ public class KsyRecordSender {
                 frame_audio++;
                 lastAddAudioTs = ksyFlvData.dts;
             }
+            recordPQueue.add(ksyFlvData);
         }
 //        Log.e(TAG, "add to QUEUE ts=" + ksyFlvData.dts + " size=" + ksyFlvData.size + " type=" + (ksyFlvData.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==a==" : "**V**"));
     }
@@ -359,6 +371,7 @@ public class KsyRecordSender {
             return;
         }
         while (ts > ideaTime) {
+            Log.e(TAG, "waiting .." + " ts=" + ts + " ideaTime=" + ideaTime);
             Thread.sleep(1);
             ideaTime = System.currentTimeMillis() - systemStartTime + ideaStartTime;
         }

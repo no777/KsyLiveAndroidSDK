@@ -1,5 +1,9 @@
 package com.ksy.recordlib.service.core;
 
+import android.util.Log;
+
+import com.ksy.recordlib.service.util.Constants;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -73,7 +77,7 @@ public abstract class KsyMediaSource implements Runnable {
                 frameSumCount = 10000;
                 frameSumDuration = frameSumCount * 33;
                 lastSysTime = System.currentTimeMillis();
-                lastTS = 0;
+//                lastTS = 0;
                 inited = true;
             } else {
                 long currentTime = System.currentTimeMillis();
@@ -86,6 +90,12 @@ public abstract class KsyMediaSource implements Runnable {
                 if (avDistance > MAX_DISTANCE_TIME || avDistance < -MAX_DISTANCE_TIME) {
                     //audio's DTS large than video's DTS so send video quickly ,delta--
                     delta = (long) (1f / MAX_DISTANCE_TIME * avDistance);
+                    if (avDistance > 10000 || avDistance < -10000) {
+                        Log.d(Constants.LOG_TAG, "lastdts = " + lastTS);
+                        Log.d(Constants.LOG_TAG, "avDistance = " + avDistance);
+                        lastTS += avDistance;
+                        avDistance = 0;
+                    }
                 }
                 lastTS += (average + delta);
             }
@@ -105,6 +115,11 @@ public abstract class KsyMediaSource implements Runnable {
             } else {
                 this.avDistance = avDistance;
             }
+        }
+
+        public void resetTs(int ts) {
+            lastTS = ts;
+            this.avDistance = 0;
         }
 
         public void setForceSyncFlay(boolean flag) {
