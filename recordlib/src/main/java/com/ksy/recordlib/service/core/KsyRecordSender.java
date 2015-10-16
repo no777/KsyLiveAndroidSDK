@@ -42,7 +42,7 @@ public class KsyRecordSender {
     private static volatile int frame_video;
     private static volatile int frame_audio;
 
-    private static final int LEVEL1_QUEUE_SZIE = 250;
+    private static final int LEVEL1_QUEUE_SZIE = 150;
     private static final int LEVEL2_QUEUE_SZIE = 500;
     private static final int MAX_QUEUE_SIZE = 800;
     private static final int MIN_QUEUE_BUFFER = 1;
@@ -167,6 +167,7 @@ public class KsyRecordSender {
                 }
                 if (needDropFrame(ksyFlv)) {
                     statDropFrame(ksyFlv);
+                    clearData();
                 } else {
                     lastRefreshTime = System.currentTimeMillis();
                     waiting(ksyFlv);
@@ -197,28 +198,28 @@ public class KsyRecordSender {
         if (duration == 0) {
             duration = 1;
         }
-        if (queueSize < LEVEL1_QUEUE_SZIE) {
-            dropFrame = false;
-        } else if (queueSize < LEVEL2_QUEUE_SZIE) {
-            if (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO || ksyFlv.isKeyframe()) {
-                dropFrame = false;
-            } else {
-                int needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
-                dropFrame = (needKps > (avgInstantaneousAudioBitrate + avgInstantaneousVideoBitrate) / 2);
-            }
-        } else if (queueSize < MAX_QUEUE_SIZE) {
-            if (ksyFlv.isKeyframe()) {
-                dropFrame = false;
-            } else {
-                int needKps;
-                if (ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO) {
-                    needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
-                } else {
-                    needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
-                }
-                dropFrame = (needKps > (avgInstantaneousAudioBitrate + avgInstantaneousVideoBitrate) / 2);
-            }
-        } else {
+        if (queueSize > LEVEL1_QUEUE_SZIE) {
+//            dropFrame = false;
+//        } else if (queueSize < LEVEL2_QUEUE_SZIE) {
+//            if (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO || ksyFlv.isKeyframe()) {
+//                dropFrame = false;
+//            } else {
+//                int needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
+//                dropFrame = (needKps > (avgInstantaneousAudioBitrate + avgInstantaneousVideoBitrate) / 2);
+//            }
+//        } else if (queueSize < MAX_QUEUE_SIZE) {
+//            if (ksyFlv.isKeyframe()) {
+//                dropFrame = false;
+//            } else {
+//                int needKps;
+//                if (ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO) {
+//                    needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
+//                } else {
+//                    needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
+//                }
+//                dropFrame = (needKps > (avgInstantaneousAudioBitrate + avgInstantaneousVideoBitrate) / 2);
+//            }
+//        } else {
             dropFrame = true;
         }
         if (ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO) {
@@ -243,7 +244,6 @@ public class KsyRecordSender {
             connected = false;
             Log.e(TAG, "statBitrate send frame failed!");
             recordHandler.sendEmptyMessage(Constants.MESSAGE_SENDER_PUSH_FAILED);
-
         } else {
             Log.d(TAG, "statBitrate send successful sent =" + sent + "type= " + type);
             long time = System.currentTimeMillis() - lastRefreshTime;

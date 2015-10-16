@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
 
     private int orientation = 0;
     private OrientationObserver orientationObserver;
+    private boolean isFirstEnter = true;
 
 
     @Override
@@ -79,6 +80,15 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         }
         // for enable network monitor
         client.registerNetworkMonitor();
+//        if (!mRecording && !isFirstEnter) {
+//            mFab.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    startRecord();
+//                }
+//            }, 100);
+//        }
+//        isFirstEnter = false;
     }
 
     @Override
@@ -87,6 +97,9 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         orientationObserver.disable();
         // for disable network monitor
         client.unregisterNetworkMonitor();
+        if (mRecording) {
+            stopRecord();
+        }
     }
 
     private void initOrientationSensor() {
@@ -133,7 +146,8 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
                     bitrate.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            bitrate.setText(KsyRecordSender.getRecordInstance().getAVBitrate() + "record angle =" + KsyRecordClientConfig.recordOrientation + ",preview angel =" + KsyRecordClientConfig.previewOrientation);
+                            bitrate.setText("push url =" + config.getUrl() + "," + KsyRecordSender.getRecordInstance().getAVBitrate() + "record angle =" + KsyRecordClientConfig.recordOrientation + ",preview angel =" + KsyRecordClientConfig.previewOrientation);
+//                            bitrate.setText(KsyRecordSender.getRecordInstance().getAVBitrate() + "record angle =" + KsyRecordClientConfig.recordOrientation + ",preview angel =" + KsyRecordClientConfig.previewOrientation);
                         }
                     }, 1000);
                 }
@@ -226,6 +240,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         KsyRecordClientConfig.Builder builder = new KsyRecordClientConfig.Builder();
         builder.setVideoProfile(CamcorderProfile.QUALITY_480P).setUrl(Constants.URL_DEFAULT);
         builder.setCameraType(Camera.CameraInfo.CAMERA_FACING_BACK);
+//        builder.setVideoBitRate(Constants.CONFIG_VIDEO_BITRATE_250K);
         config = builder.build();
     }
 
@@ -288,7 +303,6 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     @Override
     protected void onStop() {
         super.onStop();
-        stopRecord();
     }
 
     @Override
@@ -351,6 +365,5 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     public void onPushStreamState(int state) {
         Toast.makeText(MainActivity.this, "onPushStreamState :" + state, Toast.LENGTH_SHORT).show();
         Log.d(Constants.LOG_TAG_EF, "onPushStreamState = " + state);
-
     }
 }
