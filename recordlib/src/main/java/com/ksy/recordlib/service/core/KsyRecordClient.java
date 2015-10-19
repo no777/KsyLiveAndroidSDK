@@ -57,9 +57,12 @@ public class KsyRecordClient implements KsyRecord {
     private CameraSizeChangeListener mCameraSizeChangedListener;
     private NetworkChangeListener mNetworkChangeListener;
     private PushStreamStateListener mPushStreamStateListener;
+    private SwitchCameraStateListener mSwitchCameraStateListener;
     public static final int NETWORK_UNAVAILABLE = -1;
     public static final int NETWORK_WIFI = 1;
     public static final int NETWORK_MOBILE = 0;
+    private boolean mSwitchCameraLock = false;
+
 
     private enum STATE {
         RECORDING, STOP, PAUSE, ERROR
@@ -77,6 +80,10 @@ public class KsyRecordClient implements KsyRecord {
 
     public interface PushStreamStateListener {
         void onPushStreamState(int state);
+    }
+    public interface SwitchCameraStateListener {
+        void onSwitchCameraDisable();
+        void onSwitchCameraEnable();
     }
 
     private KsyRecordClient() {
@@ -158,6 +165,10 @@ public class KsyRecordClient implements KsyRecord {
 
     public void setPushStreamStateListener(PushStreamStateListener mPushStreamStateListener) {
         this.mPushStreamStateListener = mPushStreamStateListener;
+    }
+
+    public void setSwitchCameraStateListener(SwitchCameraStateListener mSwitchCameraStateListener) {
+        this.mSwitchCameraStateListener = mSwitchCameraStateListener;
     }
 
     /*
@@ -376,29 +387,34 @@ public class KsyRecordClient implements KsyRecord {
 
     @Override
     public void switchCamera() {
-        if (mVideoSource != null) {
-            mVideoSource.close();
-            mVideoSource = null;
-        }
-        if (mVideoTempSource != null) {
-            mVideoTempSource.release();
-            mVideoTempSource = null;
-        }
-        if (mCamera != null) {
-            mCamera.release();
-            mCamera = null;
-        }
-        if (mConfig.getCameraType() == Camera.CameraInfo.CAMERA_FACING_BACK) {
-            mConfig.setmCameraType(Camera.CameraInfo.CAMERA_FACING_FRONT);
-        } else {
-            mConfig.setmCameraType(Camera.CameraInfo.CAMERA_FACING_BACK);
-        }
+        if (!mSwitchCameraLock) {
+            setSwitchCameraState(true);
+            mSwitchCameraStateListener.onSwitchCameraDisable();
+            if (mVideoSource != null) {
+                mVideoSource.close();
+                mVideoSource = null;
+            }
+            if (mVideoTempSource != null) {
+                mVideoTempSource.release();
+                mVideoTempSource = null;
+            }
+            if (mCamera != null) {
+                mCamera.release();
+                mCamera = null;
+            }
+            if (mConfig.getCameraType() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                mConfig.setmCameraType(Camera.CameraInfo.CAMERA_FACING_FRONT);
+            } else {
+                mConfig.setmCameraType(Camera.CameraInfo.CAMERA_FACING_BACK);
+            }
 
-        RecoderVideoSource.sync.setForceSyncFlay(true);
-        startRecordStep();
+            RecoderVideoSource.sync.setForceSyncFlay(true);
+            startRecordStep();
 //        ksyRecordSender.clearData();
-        KsyRecordSender.getRecordInstance().needResetTs = true;
-
+            KsyRecordSender.getRecordInstance().needResetTs = true;
+        } else {
+            //current is switching
+        }
     }
 
     @Override
@@ -442,6 +458,10 @@ public class KsyRecordClient implements KsyRecord {
                     break;
                 case Constants.MESSAGE_MP4CONFIG_START_PREVIEW:
                     break;
+                case Constants.MESSAGE_SWITCH_CAMERA_FINISH:
+                    setSwitchCameraState(false);
+                    mSwitchCameraStateListener.onSwitchCameraEnable();
+                    break;
                 case Constants.MESSAGE_SENDER_PUSH_FAILED:
                     Log.d(Constants.LOG_TAG_EF, "server send push fail");
                     if (mPushStreamStateListener != null) {
@@ -457,4 +477,9 @@ public class KsyRecordClient implements KsyRecord {
     public static void setConfig(KsyRecordClientConfig mConfig) {
         KsyRecordClient.mConfig = mConfig;
     }
+
+    public void setSwitchCameraState(boolean switchCameraState) {
+        mSwitchCameraLock = switchCameraState;
+    }
 }
+

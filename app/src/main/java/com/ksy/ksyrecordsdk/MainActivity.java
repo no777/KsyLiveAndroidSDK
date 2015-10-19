@@ -42,7 +42,7 @@ import com.ksy.recordlib.service.util.OrientationObserver;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity implements OrientationActivity, KsyRecordClient.NetworkChangeListener, KsyRecordClient.PushStreamStateListener {
+public class MainActivity extends AppCompatActivity implements OrientationActivity, KsyRecordClient.NetworkChangeListener, KsyRecordClient.PushStreamStateListener, KsyRecordClient.SwitchCameraStateListener {
 
     private static final boolean DEBUG = true;
     private CameraSurfaceView mSurfaceView;
@@ -261,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         client.setOrientationActivity(this);
         client.setNetworkChangeListener(this);
         client.setPushStreamStateListener(this);
+        client.setSwitchCameraStateListener(this);
     }
 
     private void stopRecord() {
@@ -365,5 +366,15 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     public void onPushStreamState(int state) {
         Toast.makeText(MainActivity.this, "onPushStreamState :" + state, Toast.LENGTH_SHORT).show();
         Log.d(Constants.LOG_TAG_EF, "onPushStreamState = " + state);
+    }
+
+    @Override
+    public void onSwitchCameraDisable() {
+        Log.d(Constants.LOG_TAG_EF,"onSwitchCameraDisable");
+    }
+
+    @Override
+    public void onSwitchCameraEnable() {
+        Log.d(Constants.LOG_TAG_EF,"onSwitchCameraEnable");
     }
 }

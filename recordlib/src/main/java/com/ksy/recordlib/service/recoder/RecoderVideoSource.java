@@ -115,6 +115,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
             e.printStackTrace();
             release();
         }
+        mHandler.sendEmptyMessage(Constants.MESSAGE_SWITCH_CAMERA_FINISH);
     }
 
     @Override

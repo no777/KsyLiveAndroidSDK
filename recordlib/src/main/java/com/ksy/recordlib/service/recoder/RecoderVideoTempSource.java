@@ -75,7 +75,7 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
             mRecorder.prepare();
             mRecorder.start();
             mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_START_PREVIEW);
-            if (mLock.tryAcquire(700, TimeUnit.MILLISECONDS)) {
+            if (mLock.tryAcquire(1000, TimeUnit.MILLISECONDS)) {
                 Log.d(Constants.LOG_TAG, "MediaRecorder callback was called :)");
                 Thread.sleep(400);
             } else {
