@@ -89,7 +89,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
             release();
         }
         Log.d(Constants.LOG_TAG, "record 400ms for mp4config");
-        release();
         // Retrieve SPS & PPS & ProfileId with MP4Config
         try {
             MP4Config config = new MP4Config(path);
@@ -101,8 +100,10 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
+        if (mRunning) {
+            mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
+        }
+        release();
     }
 
     @Override
@@ -132,10 +133,11 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         if (mCamera != null) {
             try {
                 mCamera.reconnect();
-            } catch (IOException e) {
+                mCamera.lock();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            mCamera.lock();
+
         }
     }
 
@@ -143,13 +145,17 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         if (mRecorder != null) {
             mRecorder.setOnErrorListener(null);
             mRecorder.setOnInfoListener(null);
-            mRecorder.reset();
-            Log.d(Constants.LOG_TAG, "mRecorder reset");
-            mRecorder.release();
-            Log.d(Constants.LOG_TAG, "mRecorder release");
-            mRecorder = null;
-            Log.d(Constants.LOG_TAG, "mRecorder complete");
-            mCamera.lock();
+            try {
+                mRecorder.reset();
+                Log.d(Constants.LOG_TAG, "mRecorder reset");
+                mRecorder.release();
+                Log.d(Constants.LOG_TAG, "mRecorder release");
+                mRecorder = null;
+                Log.d(Constants.LOG_TAG, "mRecorder complete");
+                mCamera.lock();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
