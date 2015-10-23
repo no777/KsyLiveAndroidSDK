@@ -99,7 +99,7 @@ KSYLiveSDK for Android(以下简称SDK)是金山云官方推出的基于RTMP协�
     int mDropFrameFrequency;//视频帧率(只在日后FFmpeg或者MediaCodec方式有效)
     int mVideoWidth;//视频宽度
     int mVideoHeight;//视频高度
-    int mVideoEncoder;//视频编码器类型(目前仅支持H265)
+    int mVideoEncoder;//视频编码器类型(目前仅支持H264)
     int mVideoProfile;//视频编码预设,对应CameraProfile
 ```
 
