@@ -90,20 +90,23 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         }
         Log.d(Constants.LOG_TAG, "record 400ms for mp4config");
         // Retrieve SPS & PPS & ProfileId with MP4Config
-        try {
-            MP4Config config = new MP4Config(path);
-            // Delete dummy video
-            File file = new File(path);
-//            if (!file.delete()) Log.e(Constants.LOG_TAG, "Temp file could not be erased");
-            Log.d(Constants.LOG_TAG, "ProfileLevel = " + config.getProfileLevel() + ",B64SPS = " + config.getB64SPS() + ",B64PPS = " + config.getB64PPS());
-            PrefUtil.saveMp4Config(mContext, config);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        release();
         if (mRunning) {
+            try {
+                MP4Config config = new MP4Config(path);
+                // Delete dummy video
+                File file = new File(path);
+//            if (!file.delete()) Log.e(Constants.LOG_TAG, "Temp file could not be erased");
+                Log.d(Constants.LOG_TAG, "ProfileLevel = " + config.getProfileLevel() + ",B64SPS = " + config.getB64SPS() + ",B64PPS = " + config.getB64PPS());
+                PrefUtil.saveMp4Config(mContext, config);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Log.d(Constants.LOG_TAG, "message send");
             mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
         }
-        release();
+        mRunning = false;
+
     }
 
     @Override
@@ -118,13 +121,13 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
     @Override
     public void stop() {
         if (mRunning == true) {
+            mRunning = false;
             release();
         }
     }
 
     @Override
     public void release() {
-        mRunning = false;
         releaseRecorder();
         reconnectCamera();
     }
@@ -137,7 +140,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     }
 
