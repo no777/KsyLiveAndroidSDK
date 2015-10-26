@@ -22,7 +22,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by eflakemac on 15/6/19.
@@ -75,38 +74,55 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
             mRecorder.prepare();
             mRecorder.start();
             mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_START_PREVIEW);
-            if (mLock.tryAcquire(1000, TimeUnit.MILLISECONDS)) {
-                Log.d(Constants.LOG_TAG, "MediaRecorder callback was called :)");
-                Thread.sleep(400);
-            } else {
-                Log.d(Constants.LOG_TAG, "MediaRecorder callback was not called after 6 seconds... :(");
-            }
+//            if (mLock.tryAcquire(1000, TimeUnit.MILLISECONDS)) {
+//                Log.d(Constants.LOG_TAG, "MediaRecorder callback was called :)");
+//                Thread.sleep(400);
+//            } else {
+//                Log.d(Constants.LOG_TAG, "MediaRecorder callback was not called after 6 seconds... :(");
+//            }
         } catch (IOException e) {
             e.printStackTrace();
             release();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            release();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//            release();
         }
         Log.d(Constants.LOG_TAG, "record 400ms for mp4config");
         // Retrieve SPS & PPS & ProfileId with MP4Config
-        release();
-        if (mRunning) {
-            try {
-                MP4Config config = new MP4Config(path);
-                // Delete dummy video
-                File file = new File(path);
-//            if (!file.delete()) Log.e(Constants.LOG_TAG, "Temp file could not be erased");
-                Log.d(Constants.LOG_TAG, "ProfileLevel = " + config.getProfileLevel() + ",B64SPS = " + config.getB64SPS() + ",B64PPS = " + config.getB64PPS());
-                PrefUtil.saveMp4Config(mContext, config);
-            } catch (IOException e) {
-                e.printStackTrace();
+        File file = null;
+        long startTime = System.currentTimeMillis();
+        do {
+            file = new File(path);
+            if (file.exists() && file.length() > 1024 * 10) {
+                break;
+            } else {
+                try {
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-            Log.d(Constants.LOG_TAG, "message send");
-            mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
+        } while (System.currentTimeMillis() - startTime > 5000);
+        release();
+        if (file != null && file.exists() && file.length() > 0) {
+            if (mRunning) {
+                try {
+                    MP4Config config = new MP4Config(path);
+                    // Delete dummy video
+                    Log.e(Constants.LOG_TAG, "waiting use" + (System.currentTimeMillis() - startTime));
+                    Log.d(Constants.LOG_TAG, "ProfileLevel = " + config.getProfileLevel() + ",B64SPS = " + config.getB64SPS() + ",B64PPS = " + config.getB64PPS());
+                    PrefUtil.saveMp4Config(mContext, config);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+//                if (!file.delete()) Log.e(Constants.LOG_TAG, "Temp file could not be erased");
+                Log.d(Constants.LOG_TAG, "message send");
+                mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
+            }
+        } else {
+            Log.e(Constants.LOG_TAG, "waiting for temp file failed");
         }
         mRunning = false;
-
     }
 
     @Override
