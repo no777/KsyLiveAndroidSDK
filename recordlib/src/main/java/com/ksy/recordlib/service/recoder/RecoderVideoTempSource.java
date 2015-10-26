@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.concurrent.Semaphore;
 
 /**
  * Created by eflakemac on 15/6/19.
@@ -34,8 +33,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
     private KsyRecordClientConfig mConfig;
     private ParcelFileDescriptor[] piple;
     private boolean mRunning = false;
-    private String path;
-    private Semaphore mLock = new Semaphore(0);
 
     private static final int VIDEO_TEMP = 1;
 
@@ -67,25 +64,15 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
             e.printStackTrace();
             release();
         }
-//        mRecorder.setOutputFile(this.piple[1].getFileDescriptor());
         try {
             mRecorder.setOnInfoListener(this);
             mRecorder.setOnErrorListener(this);
             mRecorder.prepare();
             mRecorder.start();
             mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_START_PREVIEW);
-//            if (mLock.tryAcquire(1000, TimeUnit.MILLISECONDS)) {
-//                Log.d(Constants.LOG_TAG, "MediaRecorder callback was called :)");
-//                Thread.sleep(400);
-//            } else {
-//                Log.d(Constants.LOG_TAG, "MediaRecorder callback was not called after 6 seconds... :(");
-//            }
         } catch (IOException e) {
             e.printStackTrace();
             release();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//            release();
         }
         Log.d(Constants.LOG_TAG, "record 400ms for mp4config");
         // Retrieve SPS & PPS & ProfileId with MP4Config
@@ -93,16 +80,17 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         long startTime = System.currentTimeMillis();
         do {
             file = new File(path);
-            if (file.exists() && file.length() > 1024 * 10) {
+            if (file.exists() && file.length() > (1024 * 50)) {
                 break;
             } else {
                 try {
+//                    Log.e(Constants.LOG_TAG, "sleep 100ms");
                     Thread.sleep(100);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-        } while (System.currentTimeMillis() - startTime > 5000);
+        } while (System.currentTimeMillis() - startTime < 5000);
         release();
         if (file != null && file.exists() && file.length() > 0) {
             if (mRunning) {
@@ -115,7 +103,9 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-//                if (!file.delete()) Log.e(Constants.LOG_TAG, "Temp file could not be erased");
+                if (!file.delete()) {
+                    Log.e(Constants.LOG_TAG, "Temp file could not be erased");
+                }
                 Log.d(Constants.LOG_TAG, "message send");
                 mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
             }
@@ -204,7 +194,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         } else {
             Log.d(Constants.LOG_TAG, "WTF ?");
         }
-        mLock.release();
     }
 
     @Override
