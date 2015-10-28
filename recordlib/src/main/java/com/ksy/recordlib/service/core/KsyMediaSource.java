@@ -97,7 +97,11 @@ public abstract class KsyMediaSource implements Runnable {
                         avDistance = 0;
                     }
                 }
-                lastTS += (average + delta);
+                if (average + delta <= 0) {
+                    lastTS += 1;
+                } else {
+                    lastTS += (average + delta);
+                }
             }
             lastMessage = String.format("sync: avDis=%d delta=%d lastTs=%.1f avg=%d", avDistance, delta, lastTS, average);
             return (long) lastTS;
