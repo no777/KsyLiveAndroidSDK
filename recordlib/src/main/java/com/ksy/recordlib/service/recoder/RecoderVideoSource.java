@@ -55,7 +55,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
     private long newTime = 0;
     private long duration = 0;
     private int length;
-    private int type;
+    private int nalutype;
     private String pps;
     private String sps;
     private String pl;
@@ -304,7 +304,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
             Log.d(Constants.LOG_TAG, "header length = " + length + "content length" + contentLength);
             if (content.limit() > 0) {
                 kFlag = content.get(0);
-                type = kFlag & 0x1F;
+                nalutype = kFlag & 0x1F;
             }
             // Three types of flv video frame
             makeFlvFrame(FRAME_TYPE_DATA);
@@ -422,7 +422,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
         ksyVideo.size = flvFrameByteArray.length;
         ksyVideo.dts = (int) ts;
         ksyVideo.type = 11;
-        ksyVideo.frameType = type;
+        ksyVideo.frameType = nalutype;
 
         ksyVideoSender.addToQueue(ksyVideo, FROM_VIDEO_DATA);
 

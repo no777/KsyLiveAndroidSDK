@@ -80,6 +80,9 @@ public class KsyRecordSender {
     private long ideaStartTime;
     private long systemStartTime;
 
+    public boolean needResetTs = false;
+    private KsyRecordClient.RecordHandler recordHandler;
+
     private Speedometer vidoeFps = new Speedometer();
     private Speedometer audioFps = new Speedometer();
 
@@ -98,10 +101,6 @@ public class KsyRecordSender {
         System.loadLibrary("ksyrtmp");
         Log.i(Constants.LOG_TAG, "ksyrtmp.so loaded");
     }
-
-    public boolean needResetTs = false;
-    private int mFailedSendCount;
-    private KsyRecordClient.RecordHandler recordHandler;
 
     private KsyRecordSender() {
         recordPQueue = new PriorityQueue<>(10, new Comparator<KSYFlvData>() {
@@ -224,6 +223,9 @@ public class KsyRecordSender {
         }
         if (ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO) {
             lastSendVideoDts = ksyFlv.dts;
+            if (ksyFlv.isKeyframe()) {
+                dropFrame = false;
+            }
         } else {
             lastSendAudioDts = ksyFlv.dts;
         }
@@ -308,6 +310,7 @@ public class KsyRecordSender {
                 vidoeFps.tickTock();
                 frame_video++;
                 lastAddVideoTs = ksyFlvData.dts;
+                Log.d(Constants.LOG_TAG, "video_enqueue = " + ksyFlvData.dts + " " + ksyFlvData.isKeyframe());
             } else if (k == FROM_AUDIO) {//音频数据
                 audioFps.tickTock();
                 frame_audio++;
