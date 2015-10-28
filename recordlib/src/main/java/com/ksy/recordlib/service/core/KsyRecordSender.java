@@ -171,7 +171,7 @@ public class KsyRecordSender {
                 } else {
                     lastRefreshTime = System.currentTimeMillis();
                     waiting(ksyFlv);
-//                    Log.e(TAG, "ksyFlv ts=" + ksyFlv.dts + " size=" + ksyFlv.size + " type=" + (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==a==" : "**V**"));
+                    Log.e(TAG, "ksyFlv ts=" + ksyFlv.dts + " size=" + ksyFlv.size + " type=" + (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==ADO==" : "**VDO**"));
                     int w = _write(ksyFlv.byteBuffer, ksyFlv.byteBuffer.length);
 //                    Log.d(Constants.LOG_TAG_EF, "count = " + w);
 //                    if (w <= 0) {

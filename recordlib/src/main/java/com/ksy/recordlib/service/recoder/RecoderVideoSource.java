@@ -81,6 +81,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
 
     public static long startVideoTime;
 
+
     public RecoderVideoSource(Camera mCamera, KsyRecordClientConfig mConfig, SurfaceView mSurfaceView, KsyRecordClient.RecordHandler mRecordHandler, Context mContext) {
         this.mCamera = mCamera;
         this.mConfig = mConfig;
@@ -292,7 +293,6 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
             // 0-3 length,4 type
             int headerResult = fill(header, 0, 4);
             Log.d(Constants.LOG_TAG, "header size = " + 4 + "header read result = " + headerResult);
-            ts = sync.getTime();
             Log.d(Constants.LOG_TAG, "timestamp = " + ts);
             length = (header[0] & 0xFF) << 24 | (header[1] & 0xFF) << 16 | (header[2] & 0xFF) << 8 | (header[3] & 0xFF);
             if (length > mConfig.getVideoBitRate() * 5 || length < 0) {
@@ -341,6 +341,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
     }
 
     private void makeFlvFrame(int type) {
+        ts = sync.getTime();
         videoExtraSize = 5;
         int frameTotalLength;
         int degree = mConfig.getRecordOrientation();
