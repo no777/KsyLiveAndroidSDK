@@ -106,7 +106,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
                 if (!file.delete()) {
                     Log.e(Constants.LOG_TAG, "Temp file could not be erased");
                 }
-                Log.d(Constants.LOG_TAG, "message send");
                 mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
             }
         } else {
