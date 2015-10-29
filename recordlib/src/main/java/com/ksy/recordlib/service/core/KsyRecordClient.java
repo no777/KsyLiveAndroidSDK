@@ -62,6 +62,7 @@ public class KsyRecordClient implements KsyRecord {
     public static final int NETWORK_WIFI = 1;
     public static final int NETWORK_MOBILE = 0;
     private boolean mSwitchCameraLock = false;
+    public static long startWaitTIme, startTime;
 
 
     private enum STATE {
@@ -81,8 +82,10 @@ public class KsyRecordClient implements KsyRecord {
     public interface PushStreamStateListener {
         void onPushStreamState(int state);
     }
+
     public interface SwitchCameraStateListener {
         void onSwitchCameraDisable();
+
         void onSwitchCameraEnable();
     }
 
@@ -180,6 +183,7 @@ public class KsyRecordClient implements KsyRecord {
         if (clientState == STATE.RECORDING) {
             return;
         }
+        startTime = System.currentTimeMillis();
         mEncodeMode = judgeEncodeMode(mContext);
         try {
             mConfig.setOrientationActivity(orientationActivity);

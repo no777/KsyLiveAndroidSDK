@@ -98,7 +98,7 @@ public class KsyRecordSender {
     static {
         System.loadLibrary("rtmp");
         Log.i(Constants.LOG_TAG, "rtmp.so loaded");
-        System.loadLibrary("ksyrtmp");
+        System.loadLibrary("ksyrtmpstream");
         Log.i(Constants.LOG_TAG, "ksyrtmp.so loaded");
     }
 
@@ -117,8 +117,8 @@ public class KsyRecordSender {
     }
 
     public String getAVBitrate() {
-        return "currentTransferVideoBr=" + currentVideoBitrate +
-                ", currentTransferAudiobr:" + currentAudioBitrate +
+        return "\nwait=" + KsyRecordClient.startWaitTIme + " curTransferVideoBr=" + currentVideoBitrate +
+                ", curTransferAudiobr:" + currentAudioBitrate +
                 "\n,vFps =" + vidoeFps.getSpeed() + " aFps=" + audioFps.getSpeed() + " dropA:" + dropAudioCount + " dropV" + dropVideoCount +
                 "\n, lastStAudioTs:" + lastSendAudioTs + "stAvDist=" + (lastSendAudioTs - lastSendVideoDts) + ",size=" + recordPQueue.size() + "\nf_v=" + frame_video + " f_a=" + frame_audio + "\n" + KsyMediaSource.sync.lastMessage;
     }

@@ -403,10 +403,13 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
                 }
                 System.arraycopy(sei_content, 0, flvFrameByteArray, pos, 7);
                 pos += 7;
+
             }
             byte[] real_data_length_array = intToByteArrayFull(length);
             System.arraycopy(real_data_length_array, 0, flvFrameByteArray, pos, real_data_length_array.length);
             pos += 4;
+        } else {
+            KsyRecordClient.startWaitTIme = System.currentTimeMillis() - KsyRecordClient.startTime;
         }
         //copy real frame  data
 

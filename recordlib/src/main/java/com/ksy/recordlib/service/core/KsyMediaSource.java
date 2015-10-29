@@ -98,6 +98,7 @@ public abstract class KsyMediaSource implements Runnable {
                     }
                 }
                 if (average + delta <= 0) {
+                    Log.d(Constants.LOG_TAG, "sync: average + delta <= 0" + lastTS);
                     lastTS += 1;
                 } else {
                     lastTS += (average + delta);
