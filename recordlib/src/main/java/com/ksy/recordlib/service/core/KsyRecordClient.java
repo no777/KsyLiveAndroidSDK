@@ -234,7 +234,6 @@ public class KsyRecordClient implements KsyRecord {
 
 
     private void setUpCamera(boolean needPreview) {
-
         if (mCamera == null) {
             int numberOfCameras = Camera.getNumberOfCameras();
             if (numberOfCameras > 0) {
@@ -311,7 +310,6 @@ public class KsyRecordClient implements KsyRecord {
             mVideoSource = new RecoderVideoSource(mCamera, mConfig, mSurfaceView, mRecordHandler, mContext);
             mVideoSource.start();
         }
-
         // Audio Source
         if (mAudioSource == null) {
             mAudioSource = new RecoderAudioSource(mConfig, mRecordHandler, mContext);
@@ -387,7 +385,7 @@ public class KsyRecordClient implements KsyRecord {
 
     @Override
     public void switchCamera() {
-        if (!mSwitchCameraLock) {
+        if (!mSwitchCameraLock && clientState == STATE.RECORDING) {
             setSwitchCameraState(true);
             mSwitchCameraStateListener.onSwitchCameraDisable();
             if (mVideoSource != null) {
@@ -446,14 +444,8 @@ public class KsyRecordClient implements KsyRecord {
             super.handleMessage(msg);
             switch (msg.what) {
                 case Constants.MESSAGE_MP4CONFIG_FINISH:
-                    Log.d(Constants.LOG_TAG, "back to continue");
                     //release();
                     // just release tem
-                    if (mVideoTempSource != null) {
-                        // already release
-                        mVideoTempSource.release();
-                        mVideoTempSource = null;
-                    }
                     startRecordStep();
                     break;
                 case Constants.MESSAGE_MP4CONFIG_START_PREVIEW:
