@@ -79,6 +79,7 @@ public abstract class KsyMediaSource implements Runnable {
                 lastSysTime = System.currentTimeMillis();
 //                lastTS = 0;
                 inited = true;
+                lastTS = 0;
             } else {
                 long currentTime = System.currentTimeMillis();
                 d = currentTime - lastSysTime;

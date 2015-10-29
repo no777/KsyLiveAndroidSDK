@@ -346,6 +346,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
         int frameTotalLength;
         int degree = mConfig.getRecordOrientation();
         if (type == FRAME_TYPE_SPS) {
+            ts = 0;
             frameTotalLength = FRAME_DEFINE_HEAD_LENGTH + length + videoExtraSize + FRAME_DEFINE_FOOTER_LENGTH;
             dataLengthArray = intToByteArray(length + videoExtraSize);
         } else if (degree == 0) {
