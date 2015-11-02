@@ -166,7 +166,7 @@ public class KsyRecordSender {
                 }
                 if (needDropFrame(ksyFlv)) {
                     statDropFrame(ksyFlv);
-                    clearData();
+//                    clearData();
                 } else {
                     lastRefreshTime = System.currentTimeMillis();
                     waiting(ksyFlv);
