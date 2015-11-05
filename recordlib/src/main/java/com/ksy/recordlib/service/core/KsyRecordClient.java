@@ -21,6 +21,7 @@ import com.ksy.recordlib.service.recoder.RecoderVideoTempSource;
 import com.ksy.recordlib.service.rtmp.KSYRtmpFlvClient;
 import com.ksy.recordlib.service.util.CameraUtil;
 import com.ksy.recordlib.service.util.Constants;
+import com.ksy.recordlib.service.util.OnClientErrorListener;
 import com.ksy.recordlib.service.util.OrientationActivity;
 
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class KsyRecordClient implements KsyRecord {
 
     private OrientationActivity orientationActivity;
 
+
     private STATE clientState = STATE.STOP;
 
     private int displayOrientation;
@@ -58,6 +60,8 @@ public class KsyRecordClient implements KsyRecord {
     private NetworkChangeListener mNetworkChangeListener;
     private PushStreamStateListener mPushStreamStateListener;
     private SwitchCameraStateListener mSwitchCameraStateListener;
+    private OnClientErrorListener onClientErrorListener;
+
     public static final int NETWORK_UNAVAILABLE = -1;
     public static final int NETWORK_WIFI = 1;
     public static final int NETWORK_MOBILE = 0;
@@ -114,7 +118,6 @@ public class KsyRecordClient implements KsyRecord {
         }
     }
 
-
     public static KsyRecordClient getInstance(Context context) {
         if (mInstance == null) {
             mInstance = new KsyRecordClient(context);
@@ -152,6 +155,11 @@ public class KsyRecordClient implements KsyRecord {
             }
         }
     };
+
+    public KsyRecordClient setOnClientErrorListener(OnClientErrorListener onClientErrorListener) {
+        this.onClientErrorListener = onClientErrorListener;
+        return this;
+    }
 
     public KsyRecordClient setOrientationActivity(OrientationActivity activity) {
         this.orientationActivity = activity;
@@ -312,11 +320,13 @@ public class KsyRecordClient implements KsyRecord {
         // Video Source
         if (mVideoSource == null) {
             mVideoSource = new RecoderVideoSource(mCamera, mConfig, mSurfaceView, mRecordHandler, mContext);
+            mVideoSource.setOnClientErrorListener(onClientErrorListener);
             mVideoSource.start();
         }
         // Audio Source
         if (mAudioSource == null) {
             mAudioSource = new RecoderAudioSource(mConfig, mRecordHandler, mContext);
+            mAudioSource.setOnClientErrorListener(onClientErrorListener);
             mAudioSource.start();
         }
 
@@ -455,8 +465,10 @@ public class KsyRecordClient implements KsyRecord {
                 case Constants.MESSAGE_MP4CONFIG_START_PREVIEW:
                     break;
                 case Constants.MESSAGE_SWITCH_CAMERA_FINISH:
-                    setSwitchCameraState(false);
-                    mSwitchCameraStateListener.onSwitchCameraEnable();
+                    if (mSwitchCameraLock) {
+                        mSwitchCameraLock = false;
+                        mSwitchCameraStateListener.onSwitchCameraEnable();
+                    }
                     break;
                 case Constants.MESSAGE_SENDER_PUSH_FAILED:
                     Log.d(Constants.LOG_TAG_EF, "server send push fail");

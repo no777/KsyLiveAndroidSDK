@@ -3,6 +3,7 @@ package com.ksy.recordlib.service.core;
 import android.util.Log;
 
 import com.ksy.recordlib.service.util.Constants;
+import com.ksy.recordlib.service.util.OnClientErrorListener;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,7 +20,8 @@ public abstract class KsyMediaSource implements Runnable {
     protected byte[] header = new byte[4];
     protected long ts = 0;
     protected static ClockSync sync = new ClockSync();
-
+    protected OnClientErrorListener onClientErrorListener;
+    protected boolean mRunning = false;
 
     public abstract void prepare();
 
@@ -133,5 +135,8 @@ public abstract class KsyMediaSource implements Runnable {
         }
     }
 
-
+    public KsyMediaSource setOnClientErrorListener(OnClientErrorListener onClientErrorListener) {
+        this.onClientErrorListener = onClientErrorListener;
+        return this;
+    }
 }

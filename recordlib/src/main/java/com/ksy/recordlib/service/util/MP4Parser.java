@@ -35,7 +35,7 @@ import java.util.HashMap;
  * An mp4 file contains a tree where each node has a name and a size.
  * This class is used by H264Stream.java to determine the SPS and PPS parameters of a short video recorded by the phone.
  */
-class MP4Parser {
+public class MP4Parser {
 
     private static final String TAG = "MP4Parser";
 

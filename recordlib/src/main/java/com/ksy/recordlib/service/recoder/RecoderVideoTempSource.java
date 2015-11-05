@@ -3,7 +3,6 @@ package com.ksy.recordlib.service.recoder;
 import android.content.Context;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
-import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.SurfaceView;
 
@@ -31,9 +30,7 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
     private Camera mCamera;
     private MediaRecorder mRecorder;
     private KsyRecordClientConfig mConfig;
-    private ParcelFileDescriptor[] piple;
-    private boolean mRunning = false;
-
+    private String path;
     private static final int VIDEO_TEMP = 1;
 
     private KsyRecordSender ksyVideoTempSender;
@@ -45,25 +42,17 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         mRecorder = new MediaRecorder();
         mHandler = mRecordHandler;
         this.mContext = mContext;
-
         ksyVideoTempSender = KsyRecordSender.getRecordInstance();
         ksyVideoTempSender.setRecorderData(mConfig.getUrl(), VIDEO_TEMP);
-
     }
 
     @Override
     public void prepare() {
         mRecorder.setCamera(mCamera);
         mConfig.configMediaRecorder(mRecorder, KsyRecordClientConfig.MEDIA_TEMP);
-        String path = FileUtil.getOutputMediaFile(Constants.MEDIA_TYPE_VIDEO);
+        path = FileUtil.getOutputMediaFile(Constants.MEDIA_TYPE_VIDEO);
         mRecorder.setOutputFile(path);
         mRecorder.setMaxDuration(3000);
-        try {
-            this.piple = ParcelFileDescriptor.createPipe();
-        } catch (IOException e) {
-            e.printStackTrace();
-            release();
-        }
         try {
             mRecorder.setOnInfoListener(this);
             mRecorder.setOnErrorListener(this);
@@ -76,42 +65,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         }
         Log.d(Constants.LOG_TAG, "record 400ms for mp4config");
         // Retrieve SPS & PPS & ProfileId with MP4Config
-        File file = null;
-        long startTime = System.currentTimeMillis();
-        do {
-            file = new File(path);
-            if (file.exists() && file.length() > (1024 * 50)) {
-                break;
-            } else {
-                try {
-//                    Log.e(Constants.LOG_TAG, "sleep 100ms");
-                    Thread.sleep(100);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        } while (System.currentTimeMillis() - startTime < 5000);
-        release();
-        if (file != null && file.exists() && file.length() > 0) {
-            if (mRunning) {
-                try {
-                    MP4Config config = new MP4Config(path);
-                    // Delete dummy video
-                    Log.e(Constants.LOG_TAG, "waiting use" + (System.currentTimeMillis() - startTime));
-                    Log.d(Constants.LOG_TAG, "ProfileLevel = " + config.getProfileLevel() + ",B64SPS = " + config.getB64SPS() + ",B64PPS = " + config.getB64PPS());
-                    PrefUtil.saveMp4Config(mContext, config);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (!file.delete()) {
-                    Log.e(Constants.LOG_TAG, "Temp file could not be erased");
-                }
-                mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
-            }
-        } else {
-            Log.e(Constants.LOG_TAG, "waiting for temp file failed");
-        }
-        mRunning = false;
     }
 
     @Override
@@ -202,9 +155,43 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
 
     @Override
     public void run() {
-        long before = System.currentTimeMillis();
         prepare();
-        long after = System.currentTimeMillis();
-        Log.d(Constants.LOG_TAG, "set up mp4 config consume time:" + (after - before));
+        File file = null;
+        long startTime = System.currentTimeMillis();
+        if (mRunning) {
+            do {
+                file = new File(path);
+                if (file.exists() && file.length() > (1024 * 50)) {
+                    break;
+                } else {
+                    try {
+                        Thread.sleep(100);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } while (System.currentTimeMillis() - startTime < 5000);
+            release();
+        }
+        if (file != null && file.exists() && file.length() > 0) {
+            if (mRunning) {
+                try {
+                    MP4Config config = new MP4Config(path);
+                    // Delete dummy video
+                    Log.e(Constants.LOG_TAG, "waiting use" + (System.currentTimeMillis() - startTime));
+                    Log.d(Constants.LOG_TAG, "ProfileLevel = " + config.getProfileLevel() + ",B64SPS = " + config.getB64SPS() + ",B64PPS = " + config.getB64PPS());
+                    PrefUtil.saveMp4Config(mContext, config);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (!file.delete()) {
+                    Log.e(Constants.LOG_TAG, "Temp file could not be erased");
+                }
+                mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_FINISH);
+            }
+        } else {
+            Log.e(Constants.LOG_TAG, "waiting for temp file failed");
+        }
+        mRunning = false;
     }
 }

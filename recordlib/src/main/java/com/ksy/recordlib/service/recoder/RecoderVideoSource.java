@@ -48,28 +48,19 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
     private MediaRecorder mRecorder;
     private KsyRecordClientConfig mConfig;
     private ParcelFileDescriptor[] piple;
-    private boolean mRunning = false;
-    private String path;
     //    private long delay = 0;
-    private long oldTime = 0;
-    private long newTime = 0;
-    private long duration = 0;
     private int length;
     private int nalutype;
     private String pps;
     private String sps;
     private String pl;
     //    private int sum = 0;
-    private boolean isSeiFrameSended = false;
     private boolean isSpsFrameSended = false;
     private ByteBuffer content;
     private byte[] flvFrameByteArray;
     private byte[] dataLengthArray;
     private byte[] timestampArray;
     private byte[] allFrameLengthArray;
-    private byte[] buffer = new byte[1 * 1000 * 1000];
-    private boolean isWriteFlvInSdcard = false;
-    private int recordsum = 0;
     private int videoExtraSize = 5;
     private int last_sum = 0;
 
@@ -172,8 +163,10 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
     @Override
     public void run() {
         prepare();
-        is = new FileInputStream(this.piple[0].getFileDescriptor());
-        inputChannel = is.getChannel();
+        if (mRunning) {
+            is = new FileInputStream(this.piple[0].getFileDescriptor());
+            inputChannel = is.getChannel();
+        }
         while (mRunning) {
             Log.d(Constants.LOG_TAG, "entering video loop");
             // This will skip the MPEG4 header if this step fails we can't stream anything :(
@@ -196,7 +189,6 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
 
             while (!Thread.interrupted()) {
                 // Begin parse video data
-                oldTime = System.currentTimeMillis();
                 parseAndSend();
                /* duration = System.currentTimeMillis() - oldTime;
                 stats.push(duration);
@@ -308,24 +300,6 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
             }
             // Three types of flv video frame
             makeFlvFrame(FRAME_TYPE_DATA);
-
-            // Send Sei Frame Here
-//            content.clear();
-//            byte[] sei_content = null;
-//            int degree = mConfig.getRecordOrientation();
-//            if (degree == 0) {
-//            } else if (degree == 90) {
-//                sei_content = SEI_ROTATION_90;
-//            } else if (degree == 180) {
-//                sei_content = SEI_ROTATION_180;
-//            } else if (degree == 270) {
-//                sei_content = SEI_ROTATION_270;
-//            }
-//            if (sei_content != null) {
-//                content.put(sei_content);
-//                length = content.position();
-//                makeFlvFrame(FRAME_TYPE_DATA);
-//            }
 
         } catch (IOException e) {
             e.printStackTrace();
