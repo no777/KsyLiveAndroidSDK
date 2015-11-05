@@ -15,6 +15,7 @@ import com.ksy.recordlib.service.core.KsyRecordClient;
 import com.ksy.recordlib.service.core.KsyRecordClientConfig;
 import com.ksy.recordlib.service.core.KsyRecordSender;
 import com.ksy.recordlib.service.util.Constants;
+import com.ksy.recordlib.service.util.OnClientErrorListener;
 import com.ksy.recordlib.service.util.PrefUtil;
 
 import java.io.BufferedOutputStream;
@@ -103,9 +104,12 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
             mRecorder.prepare();
             mRecorder.start();
             startVideoTime = System.currentTimeMillis();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             release();
+            if (onClientErrorListener != null) {
+                onClientErrorListener.onClientError(OnClientErrorListener.SOURCE_VIDEO, OnClientErrorListener.ERROR_MEDIACODER_START_FAILED);
+            }
         }
         mHandler.sendEmptyMessage(Constants.MESSAGE_SWITCH_CAMERA_FINISH);
     }

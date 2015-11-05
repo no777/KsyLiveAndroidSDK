@@ -13,6 +13,7 @@ import com.ksy.recordlib.service.core.KsyRecordClient;
 import com.ksy.recordlib.service.core.KsyRecordClientConfig;
 import com.ksy.recordlib.service.core.KsyRecordSender;
 import com.ksy.recordlib.service.util.Constants;
+import com.ksy.recordlib.service.util.OnClientErrorListener;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -103,7 +104,12 @@ public class RecoderAudioSource extends KsyMediaSource implements MediaRecorder.
             mRecorder.prepare();
             mRecorder.start();
             startAudioTime = System.currentTimeMillis();
-        } catch (IOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
+            release();
+            if (onClientErrorListener != null) {
+                onClientErrorListener.onClientError(OnClientErrorListener.SOURCE_AUDIO, OnClientErrorListener.ERROR_MEDIACODER_START_FAILED);
+            }
         }
     }
 

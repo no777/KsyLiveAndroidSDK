@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * Created by eflakemac on 15/6/17.
  */
-public class KsyRecordClient implements KsyRecord {
+public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
 
     private static final String TAG = "KsyRecordClient";
@@ -67,6 +67,14 @@ public class KsyRecordClient implements KsyRecord {
     public static final int NETWORK_MOBILE = 0;
     private boolean mSwitchCameraLock = false;
     public static long startWaitTIme, startTime;
+
+    @Override
+    public void onClientError(int source, int what) {
+        if (onClientErrorListener != null) {
+            onClientErrorListener.onClientError(source, what);
+        }
+        stopRecord();
+    }
 
 
     private enum STATE {
@@ -224,6 +232,7 @@ public class KsyRecordClient implements KsyRecord {
         setUpCamera(true);
         if (mVideoTempSource == null) {
             mVideoTempSource = new RecoderVideoTempSource(mCamera, mConfig, mSurfaceView, mRecordHandler, mContext);
+            mVideoTempSource.setOnClientErrorListener(this);
             mVideoTempSource.start();
         }
     }
@@ -246,56 +255,59 @@ public class KsyRecordClient implements KsyRecord {
 
 
     private void setUpCamera(boolean needPreview) {
-        if (mCamera == null) {
-            int numberOfCameras = Camera.getNumberOfCameras();
-            if (numberOfCameras > 0) {
-                Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-                for (int i = 0; i < numberOfCameras; i++) {
-                    Camera.getCameraInfo(i, cameraInfo);
-                    if (cameraInfo.facing == mConfig.getCameraType()) {
-                        mCamera = Camera.open(i);
-                        currentCameraId = i;
+        try {
+            if (mCamera == null) {
+                int numberOfCameras = Camera.getNumberOfCameras();
+                if (numberOfCameras > 0) {
+                    Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+                    for (int i = 0; i < numberOfCameras; i++) {
+                        Camera.getCameraInfo(i, cameraInfo);
+                        if (cameraInfo.facing == mConfig.getCameraType()) {
+                            mCamera = Camera.open(i);
+                            currentCameraId = i;
+                        }
                     }
+                } else {
+                    mCamera = Camera.open();
                 }
-            } else {
-                mCamera = Camera.open();
-            }
-            displayOrientation = CameraUtil.getDisplayOrientation(0, currentCameraId);
-            KsyRecordClientConfig.previewOrientation = displayOrientation;
-            Log.d(Constants.LOG_TAG_EF, "current displayOrientation = " + displayOrientation);
-            mCamera.setDisplayOrientation(displayOrientation);
-            Camera.Parameters parameters = mCamera.getParameters();
-            if (mCameraSizeChangedListener != null)
-                mCameraSizeChangedListener.onCameraPreviewSize(parameters.getPreviewSize().width, parameters.getPreviewSize().height);
-            parameters.setRotation(0);
-            List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
-            Camera.Size optimalSize = CameraHelper.getOptimalPreviewSize(mSupportedPreviewSizes,
-                    mSurfaceView.getHeight(), mSurfaceView.getWidth());
-            ViewGroup.LayoutParams params = mSurfaceView.getLayoutParams();
+                displayOrientation = CameraUtil.getDisplayOrientation(0, currentCameraId);
+                KsyRecordClientConfig.previewOrientation = displayOrientation;
+                Log.d(Constants.LOG_TAG_EF, "current displayOrientation = " + displayOrientation);
+                mCamera.setDisplayOrientation(displayOrientation);
+                Camera.Parameters parameters = mCamera.getParameters();
+                if (mCameraSizeChangedListener != null)
+                    mCameraSizeChangedListener.onCameraPreviewSize(parameters.getPreviewSize().width, parameters.getPreviewSize().height);
+                parameters.setRotation(0);
+                List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
+                Camera.Size optimalSize = CameraHelper.getOptimalPreviewSize(mSupportedPreviewSizes,
+                        mSurfaceView.getHeight(), mSurfaceView.getWidth());
+                ViewGroup.LayoutParams params = mSurfaceView.getLayoutParams();
 
-            if (parameters.getSupportedFocusModes().contains(
-                    Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-            }
-            mCamera.setParameters(parameters);
-            if (needPreview) {
-                params.height = optimalSize.height;
-                params.width = optimalSize.width;
-                mSurfaceView.setLayoutParams(params);
-                parameters.setPreviewSize(optimalSize.width, optimalSize.height);
-                try {
+                if (parameters.getSupportedFocusModes().contains(
+                        Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+                    parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                }
+                mCamera.setParameters(parameters);
+                if (needPreview) {
+                    params.height = optimalSize.height;
+                    params.width = optimalSize.width;
+                    mSurfaceView.setLayoutParams(params);
+                    parameters.setPreviewSize(optimalSize.width, optimalSize.height);
+
                     if (mSurfaceView != null) {
                         mCamera.setPreviewDisplay(mSurfaceView.getHolder());
                     } else if (mTextureView != null) {
                         mCamera.setPreviewTexture(mTextureView.getSurfaceTexture());
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+
                 }
             }
+            // Here we reuse camera, just unlock it
+            mCamera.unlock();
+        } catch (Exception e) {
+            onClientError(SOURCE_CLIENT, ERROR_CAMERA_START_FAILED);
+            e.printStackTrace();
         }
-        // Here we reuse camera, just unlock it
-        mCamera.unlock();
     }
 
     private void setUpEncoder() {
@@ -320,13 +332,13 @@ public class KsyRecordClient implements KsyRecord {
         // Video Source
         if (mVideoSource == null) {
             mVideoSource = new RecoderVideoSource(mCamera, mConfig, mSurfaceView, mRecordHandler, mContext);
-            mVideoSource.setOnClientErrorListener(onClientErrorListener);
+            mVideoSource.setOnClientErrorListener(this);
             mVideoSource.start();
         }
         // Audio Source
         if (mAudioSource == null) {
             mAudioSource = new RecoderAudioSource(mConfig, mRecordHandler, mContext);
-            mAudioSource.setOnClientErrorListener(onClientErrorListener);
+            mAudioSource.setOnClientErrorListener(this);
             mAudioSource.start();
         }
 
@@ -419,7 +431,6 @@ public class KsyRecordClient implements KsyRecord {
             } else {
                 mConfig.setmCameraType(Camera.CameraInfo.CAMERA_FACING_BACK);
             }
-
             RecoderVideoSource.sync.setForceSyncFlay(true);
             startRecordStep();
 //        ksyRecordSender.clearData();

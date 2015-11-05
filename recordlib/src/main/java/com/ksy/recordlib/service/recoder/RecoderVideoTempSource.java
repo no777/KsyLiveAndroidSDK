@@ -13,6 +13,7 @@ import com.ksy.recordlib.service.core.KsyRecordSender;
 import com.ksy.recordlib.service.util.Constants;
 import com.ksy.recordlib.service.util.FileUtil;
 import com.ksy.recordlib.service.util.MP4Config;
+import com.ksy.recordlib.service.util.OnClientErrorListener;
 import com.ksy.recordlib.service.util.PrefUtil;
 
 import java.io.BufferedOutputStream;
@@ -48,20 +49,23 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
 
     @Override
     public void prepare() {
-        mRecorder.setCamera(mCamera);
-        mConfig.configMediaRecorder(mRecorder, KsyRecordClientConfig.MEDIA_TEMP);
-        path = FileUtil.getOutputMediaFile(Constants.MEDIA_TYPE_VIDEO);
-        mRecorder.setOutputFile(path);
-        mRecorder.setMaxDuration(3000);
         try {
+            mRecorder.setCamera(mCamera);
+            mConfig.configMediaRecorder(mRecorder, KsyRecordClientConfig.MEDIA_TEMP);
+            path = FileUtil.getOutputMediaFile(Constants.MEDIA_TYPE_VIDEO);
+            mRecorder.setOutputFile(path);
+            mRecorder.setMaxDuration(3000);
             mRecorder.setOnInfoListener(this);
             mRecorder.setOnErrorListener(this);
             mRecorder.prepare();
             mRecorder.start();
             mHandler.sendEmptyMessage(Constants.MESSAGE_MP4CONFIG_START_PREVIEW);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             release();
+            if (onClientErrorListener != null) {
+                onClientErrorListener.onClientError(OnClientErrorListener.SOURCE_VIDEO_TEMP, OnClientErrorListener.ERROR_MEDIACODER_START_FAILED);
+            }
         }
         Log.d(Constants.LOG_TAG, "record 400ms for mp4config");
         // Retrieve SPS & PPS & ProfileId with MP4Config

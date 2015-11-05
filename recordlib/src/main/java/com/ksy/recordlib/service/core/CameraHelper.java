@@ -44,12 +44,15 @@ public class CameraHelper {
         if (sizes == null) {
             android.hardware.Camera camera = CameraHelper.getDefaultCamera(cameraType);
             if (camera != null) {
-                sizes = camera.getParameters().getSupportedVideoSizes();
-                if (sizes == null) {
-                    sizes = camera.getParameters().getSupportedPreviewSizes();
+                try {
+                    sizes = camera.getParameters().getSupportedVideoSizes();
+                    if (sizes == null) {
+                        sizes = camera.getParameters().getSupportedPreviewSizes();
+                    }
+                    camearSizeTable.put(cameraType, sizes);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                camearSizeTable.put(cameraType, sizes);
-
             }
             if (camera != null)
                 camera.release();
