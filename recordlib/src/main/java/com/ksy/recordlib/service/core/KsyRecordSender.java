@@ -279,8 +279,8 @@ public class KsyRecordSender {
 
     private void removeQueue(PriorityQueue<KSYFlvData> recordPQueue) {
         Log.e(TAG, "removeQueue .." + recordPQueue.size());
-        KSYFlvData data = recordPQueue.remove();
         if (recordPQueue.size() > LEVEL1_QUEUE_SZIE) {
+            KSYFlvData data = recordPQueue.remove();
             if (data.type == KSYFlvData.FLV_TYPE_VIDEO) {
                 if (data.isKeyframe()) {
                     removeQueue(recordPQueue);
