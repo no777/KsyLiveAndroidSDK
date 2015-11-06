@@ -42,8 +42,8 @@ public class KsyRecordSender {
     private static volatile int frame_video;
     private static volatile int frame_audio;
 
-    private static final int LEVEL1_QUEUE_SZIE = 150;
-    private static final int LEVEL2_QUEUE_SZIE = 500;
+    private static final int LEVEL1_QUEUE_SZIE = 100;
+    private static final int LEVEL2_QUEUE_SZIE = 150;
     private static final int MAX_QUEUE_SIZE = 800;
     private static final int MIN_QUEUE_BUFFER = 1;
 
@@ -275,7 +275,23 @@ public class KsyRecordSender {
                 last_stat_time = System.currentTimeMillis();
             }
         }
+    }
 
+    private void removeQueue(PriorityQueue<KSYFlvData> recordPQueue) {
+        Log.e(TAG, "removeQueue .." + recordPQueue.size());
+        KSYFlvData data = recordPQueue.remove();
+        if (recordPQueue.size() > LEVEL1_QUEUE_SZIE) {
+            if (data.type == KSYFlvData.FLV_TYPE_VIDEO) {
+                if (data.isKeyframe()) {
+                    removeQueue(recordPQueue);
+                    recordPQueue.add(data);
+                } else {
+                    frame_video--;
+                }
+            } else {
+                frame_audio--;
+            }
+        }
     }
 
     //send data to server
@@ -289,14 +305,11 @@ public class KsyRecordSender {
         KsyMediaSource.sync.setAvDistance(lastAddAudioTs - lastAddVideoTs);
         // add video data
         synchronized (mutex) {
-            if (recordPQueue.size() > MAX_QUEUE_SIZE) {
-                if (recordPQueue.remove().type == KSYFlvData.FLV_TYPE_VIDEO) {
-                    frame_video--;
-                } else {
-                    frame_audio--;
-                }
+            if (recordPQueue.size() > LEVEL2_QUEUE_SZIE) {
+                Log.e(TAG, "removeQueue beging.." + recordPQueue.size());
+                removeQueue(recordPQueue);
+                Log.e(TAG, "removeQueue end.." + recordPQueue.size());
             }
-
             if (k == FROM_VIDEO) { //视频数据
                 if (needResetTs) {
                     KsyMediaSource.sync.resetTs(lastAddAudioTs);
