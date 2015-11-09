@@ -46,8 +46,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
 
     private static final boolean DEBUG = true;
     private CameraSurfaceView mSurfaceView;
-    private FloatingActionButton mFab;
-    private FloatingActionButton change;
+    private FloatingActionButton mFab, change, flashlight;
     private boolean mRecording = false;
     private KsyRecordClient client;
     private KsyRecordClientConfig config;
@@ -61,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     private int orientation = 0;
     private OrientationObserver orientationObserver;
     private boolean isFirstEnter = true;
+    private boolean flash = true;
 
 
     @Override
@@ -125,6 +125,13 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
             }
         });
         change = (FloatingActionButton) findViewById(R.id.change);
+        flashlight = (FloatingActionButton) findViewById(R.id.flash);
+        flashlight.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleFlash();
+            }
+        });
         change.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -218,18 +225,6 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
                         }
                     }).show();
                 }
-// else {//                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-//                    builder.itemsCallbackSingleChoice(-1, new AlertDialog.ListCallbackSingleChoice() {
-//                        @Override
-//                        public boolean onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
-//                            adapter.onItemSelected(drawerItem, position, which, null);
-//                            return false;
-//                        }
-//                    });
-//                    builder.positiveText(R.string.choose);
-//                    adapter.setDialogItems(builder, position);
-//                    builder.show().setSelectedIndex(adapter.setDefaultSelected(position));
-//                }
             }
         });
     }
@@ -290,11 +285,17 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         }
     }
 
-    // TODO swith camera here
+    private void toggleFlash() {
+        if (KsyRecordClient.CAMEAR_FLASH_SUCCESS == client.turnLight(flash)) {
+            flash = !flash;
+            Toast.makeText(getApplicationContext(), "success " + flash, Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
     private void changeCamera() {
         Log.d(Constants.LOG_TAG, "changeCamera===== ");
         client.switchCamera();
-//        config.setmCameraType(Camera.CameraInfo.CAMERA_FACING_FRONT);
     }
 
     /*
@@ -370,11 +371,11 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
 
     @Override
     public void onSwitchCameraDisable() {
-        Log.d(Constants.LOG_TAG_EF,"onSwitchCameraDisable");
+        Log.d(Constants.LOG_TAG_EF, "onSwitchCameraDisable");
     }
 
     @Override
     public void onSwitchCameraEnable() {
-        Log.d(Constants.LOG_TAG_EF,"onSwitchCameraEnable");
+        Log.d(Constants.LOG_TAG_EF, "onSwitchCameraEnable");
     }
 }

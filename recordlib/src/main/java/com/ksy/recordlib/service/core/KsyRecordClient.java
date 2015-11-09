@@ -125,12 +125,16 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         ksyRecordSender.setSenderListener(new KsyRecordSender.SenderListener() {
             @Override
             public void OnStartComplete() {
-                startListener.OnStartComplete();
+                if (startListener != null) {
+                    startListener.OnStartComplete();
+                }
             }
 
             @Override
             public void OnStartFailed() {
-                startListener.OnStartFailed();
+                if (startListener != null) {
+                    startListener.OnStartFailed();
+                }
             }
         });
 
@@ -491,7 +495,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         if (!mSwitchCameraLock && clientState == STATE.RECORDING) {
             setSwitchCameraState(true);
             isCanTurnLightFlag = false;
-            mSwitchCameraStateListener.onSwitchCameraDisable();
+            if (mSwitchCameraStateListener != null) {
+                mSwitchCameraStateListener.onSwitchCameraDisable();
+            }
             if (mVideoSource != null) {
                 mVideoSource.close();
                 mVideoSource = null;
@@ -557,7 +563,10 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                     if (mSwitchCameraLock) {
                         isCanTurnLightFlag = true;
                         mSwitchCameraLock = false;
-                        mSwitchCameraStateListener.onSwitchCameraEnable();
+                        if (mSwitchCameraStateListener != null) {
+                            mSwitchCameraStateListener.onSwitchCameraEnable();
+                        }
+
                     }
                     break;
                 case Constants.MESSAGE_SENDER_PUSH_FAILED:
