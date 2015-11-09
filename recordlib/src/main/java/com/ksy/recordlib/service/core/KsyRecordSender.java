@@ -81,6 +81,7 @@ public class KsyRecordSender {
     private long systemStartTime;
 
     public boolean needResetTs = false;
+    private SenderListener senderListener;
     private KsyRecordClient.RecordHandler recordHandler;
 
     private Speedometer vidoeFps = new Speedometer();
@@ -109,6 +110,10 @@ public class KsyRecordSender {
                 return lhs.dts - rhs.dts;
             }
         });
+    }
+
+    public void setSenderListener(SenderListener l) {
+        senderListener = l;
     }
 
 
@@ -351,6 +356,11 @@ public class KsyRecordSender {
             Log.e(TAG, "_set_output_url .." + _set_output_url(mUrl));
             int result = _open();
             connected = result == 0;
+            if (connected) {
+                senderListener.OnStartComplete();
+            } else {
+                senderListener.OnStartFailed();
+            }
             Log.e(TAG, "opens result ..>" + result);
         }
     }
@@ -382,6 +392,11 @@ public class KsyRecordSender {
         if (j == FIRST_OPEN) {
             int k = _open();
             connected = k == 0;
+            if (connected) {
+                senderListener.OnStartComplete();
+            } else {
+                senderListener.OnStartFailed();
+            }
             Log.e(Constants.LOG_TAG_EF, "connected .. open result=" + k);
         }
     }
@@ -418,6 +433,13 @@ public class KsyRecordSender {
         }
         inited = false;
     }
+
+    public interface SenderListener {
+        void OnStartComplete();
+
+        void OnStartFailed();
+    }
+
 
     private native int _set_output_url(String url);
 

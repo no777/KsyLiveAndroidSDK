@@ -55,6 +55,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
     private OrientationActivity orientationActivity;
 
+    private StartListener startListener;
 
     private STATE clientState = STATE.STOP;
 
@@ -98,6 +99,13 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         void onSwitchCameraEnable();
     }
 
+    public interface StartListener {
+        void OnStartComplete();
+
+        void OnStartFailed();
+    }
+
+
     @Override
     public void onClientError(int source, int what) {
         if (onClientErrorListener != null) {
@@ -114,6 +122,18 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         mRecordHandler = new RecordHandler();
         ksyRecordSender = KsyRecordSender.getRecordInstance();
         ksyRecordSender.setStateMonitor(mRecordHandler);
+        ksyRecordSender.setSenderListener(new KsyRecordSender.SenderListener() {
+            @Override
+            public void OnStartComplete() {
+                startListener.OnStartComplete();
+            }
+
+            @Override
+            public void OnStartFailed() {
+                startListener.OnStartFailed();
+            }
+        });
+
         // Remove old network monitor
         // NetworkMonitor.start(context);
     }
@@ -195,10 +215,15 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         this.mSwitchCameraStateListener = mSwitchCameraStateListener;
     }
 
+    public KsyRecordClient setStartListener(StartListener startListener) {
+        this.startListener = startListener;
+        return this;
+    }
+
     /*
-            *
-            * Ks3 Record API
-            * */
+                *
+                * Ks3 Record API
+                * */
     @Override
     public void startRecord() throws KsyRecordException {
         if (clientState == STATE.RECORDING) {
