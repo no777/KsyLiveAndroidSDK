@@ -32,6 +32,10 @@ import java.util.List;
  */
 public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
+    public static final int CAMEAR_NO_FLASH = -2;
+    public static final int CAMEAR_LIGHT_ERROR = -1;
+    public static final int CAMEAR_FLASH_SUCCESS = 0;
+
 
     private static final String TAG = "KsyRecordClient";
     private static KsyRecordClient mInstance;
@@ -68,14 +72,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     private boolean mSwitchCameraLock = false;
     public static long startWaitTIme, startTime;
 
-    @Override
-    public void onClientError(int source, int what) {
-        if (onClientErrorListener != null) {
-            onClientErrorListener.onClientError(source, what);
-        }
-        stopRecord();
-    }
-
+    private boolean isCanTurnLightFlag = false;
 
     private enum STATE {
         RECORDING, STOP, PAUSE, ERROR
@@ -99,6 +96,14 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         void onSwitchCameraDisable();
 
         void onSwitchCameraEnable();
+    }
+
+    @Override
+    public void onClientError(int source, int what) {
+        if (onClientErrorListener != null) {
+            onClientErrorListener.onClientError(source, what);
+        }
+        stopRecord();
     }
 
     private KsyRecordClient() {
@@ -253,6 +258,51 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         return mConfig.validateParam();
     }
 
+    public boolean canTurnLight() {
+        return isCanTurnLightFlag;
+    }
+
+    public int turnLight(boolean on) {
+        if (mCamera == null) {
+            return CAMEAR_LIGHT_ERROR;
+        }
+
+        Camera.Parameters parameters = mCamera.getParameters();
+        if (parameters == null) {
+            return CAMEAR_LIGHT_ERROR;
+        }
+
+        List<String> flashModes = parameters.getSupportedFlashModes();
+        // check camera flash mode
+        if (flashModes == null) {
+            return CAMEAR_NO_FLASH;
+        }
+
+        String flashMode = parameters.getFlashMode();
+
+        if (on) {
+            if (!Camera.Parameters.FLASH_MODE_TORCH.equals(flashMode)) {
+                // turn on the flash
+                if (flashModes.contains(Camera.Parameters.FLASH_MODE_TORCH)) {
+                    parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                    mCamera.setParameters(parameters);
+                    return CAMEAR_FLASH_SUCCESS;
+                }
+            }
+        } else {
+            if (!Camera.Parameters.FLASH_MODE_OFF.equals(flashMode)) {
+                // Turn off the flash
+                if (flashModes.contains(Camera.Parameters.FLASH_MODE_OFF)) {
+                    parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                    mCamera.setParameters(parameters);
+                    return CAMEAR_FLASH_SUCCESS;
+                }
+            }
+        }
+
+        return CAMEAR_NO_FLASH;
+    }
+
 
     private void setUpCamera(boolean needPreview) {
         try {
@@ -387,6 +437,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         }
         ksyRecordSender.disconnect();
         clientState = STATE.STOP;
+        isCanTurnLightFlag = false;
     }
 
     @Override
@@ -407,12 +458,14 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
             mCamera.release();
             mCamera = null;
         }
+        isCanTurnLightFlag = false;
     }
 
     @Override
     public void switchCamera() {
         if (!mSwitchCameraLock && clientState == STATE.RECORDING) {
             setSwitchCameraState(true);
+            isCanTurnLightFlag = false;
             mSwitchCameraStateListener.onSwitchCameraDisable();
             if (mVideoSource != null) {
                 mVideoSource.close();
@@ -477,6 +530,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                     break;
                 case Constants.MESSAGE_SWITCH_CAMERA_FINISH:
                     if (mSwitchCameraLock) {
+                        isCanTurnLightFlag = true;
                         mSwitchCameraLock = false;
                         mSwitchCameraStateListener.onSwitchCameraEnable();
                     }
