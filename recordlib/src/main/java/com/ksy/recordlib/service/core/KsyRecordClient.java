@@ -124,14 +124,14 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         ksyRecordSender.setStateMonitor(mRecordHandler);
         ksyRecordSender.setSenderListener(new KsyRecordSender.SenderListener() {
             @Override
-            public void OnStartComplete() {
+            public void onStartComplete() {
                 if (startListener != null) {
                     startListener.OnStartComplete();
                 }
             }
 
             @Override
-            public void OnStartFailed() {
+            public void onStartFailed() {
                 if (startListener != null) {
                     startListener.OnStartFailed();
                 }

@@ -357,9 +357,9 @@ public class KsyRecordSender {
             int result = _open();
             connected = result == 0;
             if (connected) {
-                senderListener.OnStartComplete();
+                senderListener.onStartComplete();
             } else {
-                senderListener.OnStartFailed();
+                senderListener.onStartFailed();
             }
             Log.e(TAG, "opens result ..>" + result);
         }
@@ -393,9 +393,9 @@ public class KsyRecordSender {
             int k = _open();
             connected = k == 0;
             if (connected) {
-                senderListener.OnStartComplete();
+                senderListener.onStartComplete();
             } else {
-                senderListener.OnStartFailed();
+                senderListener.onStartFailed();
             }
             Log.e(Constants.LOG_TAG_EF, "connected .. open result=" + k);
         }
@@ -435,9 +435,9 @@ public class KsyRecordSender {
     }
 
     public interface SenderListener {
-        void OnStartComplete();
+        void onStartComplete();
 
-        void OnStartFailed();
+        void onStartFailed();
     }
 
 

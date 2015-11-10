@@ -43,7 +43,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
                 android:layout_gravity="bottom|end"
-                android:layout_margin="16dp"
+                android:layout_margin="14dp"
                 android:src="@mipmap/btn_record"
                 app:elevation="6dp"
                 app:pressedTranslationZ="12dp" />
@@ -56,7 +56,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
                 android:layout_gravity="bottom|end"
-                android:layout_margin="66dp"
+                android:layout_margin="69dp"
                 android:src="@mipmap/btn_switch"
                 app:elevation="6dp"
                 app:pressedTranslationZ="12dp" />
@@ -69,7 +69,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
                 android:layout_gravity="bottom|end"
-                android:layout_margin="106dp"
+                android:layout_margin="126dp"
                 android:src="@mipmap/btn_flashlight"
                 app:elevation="6dp"
                 app:pressedTranslationZ="12dp" />

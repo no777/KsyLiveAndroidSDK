@@ -42,7 +42,7 @@ import com.ksy.recordlib.service.util.OrientationObserver;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity implements OrientationActivity, KsyRecordClient.NetworkChangeListener, KsyRecordClient.PushStreamStateListener, KsyRecordClient.SwitchCameraStateListener {
+public class MainActivity extends AppCompatActivity implements OrientationActivity, KsyRecordClient.NetworkChangeListener, KsyRecordClient.PushStreamStateListener, KsyRecordClient.SwitchCameraStateListener, KsyRecordClient.StartListener {
 
     private static final boolean DEBUG = true;
     private CameraSurfaceView mSurfaceView;
@@ -257,6 +257,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         client.setNetworkChangeListener(this);
         client.setPushStreamStateListener(this);
         client.setSwitchCameraStateListener(this);
+        client.setStartListener(this);
     }
 
     private void stopRecord() {
@@ -288,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     private void toggleFlash() {
         if (KsyRecordClient.CAMEAR_FLASH_SUCCESS == client.turnLight(flash)) {
             flash = !flash;
-            Toast.makeText(getApplicationContext(), "success " + flash, Toast.LENGTH_SHORT).show();
+            showToast("flashlight is" + (!flash));
         }
 
     }
@@ -365,17 +366,31 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
 
     @Override
     public void onPushStreamState(int state) {
-        Toast.makeText(MainActivity.this, "onPushStreamState :" + state, Toast.LENGTH_SHORT).show();
-        Log.d(Constants.LOG_TAG_EF, "onPushStreamState = " + state);
+        showToast("onPushStreamState :" + state);
     }
 
     @Override
     public void onSwitchCameraDisable() {
-        Log.d(Constants.LOG_TAG_EF, "onSwitchCameraDisable");
+        showToast("onSwitchCameraDisable :");
     }
 
     @Override
     public void onSwitchCameraEnable() {
-        Log.d(Constants.LOG_TAG_EF, "onSwitchCameraEnable");
+        showToast("onSwitchCameraEnable :");
+    }
+
+    @Override
+    public void OnStartComplete() {
+        showToast("OnStartComplete :");
+    }
+
+    @Override
+    public void OnStartFailed() {
+        showToast("OnStartFailed :");
+    }
+
+    private void showToast(String text) {
+        Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
+        Log.d(Constants.LOG_TAG_EF, text);
     }
 }
