@@ -242,7 +242,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
             e.printStackTrace();
             Log.e(Constants.LOG_TAG, "startRecord() : e =" + e);
         }
-
+        mSwitchCameraLock = true;
         if (checkConfig()) {
             // Here we begin
             if (mEncodeMode == Constants.ENCODE_MODE_MEDIA_RECORDER) {
@@ -497,7 +497,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     public void switchCamera() {
         if (!mSwitchCameraLock && clientState == STATE.RECORDING) {
             turnLight(false);
-            setSwitchCameraState(true);
+            mSwitchCameraLock = true;
             isCanTurnLightFlag = false;
             if (mSwitchCameraStateListener != null) {
                 mSwitchCameraStateListener.onSwitchCameraDisable();
@@ -588,8 +588,5 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         KsyRecordClient.mConfig = mConfig;
     }
 
-    public void setSwitchCameraState(boolean switchCameraState) {
-        mSwitchCameraLock = switchCameraState;
-    }
 }
 
