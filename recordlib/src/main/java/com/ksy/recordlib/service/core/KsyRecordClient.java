@@ -70,7 +70,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     public static final int NETWORK_UNAVAILABLE = -1;
     public static final int NETWORK_WIFI = 1;
     public static final int NETWORK_MOBILE = 0;
-    private boolean mSwitchCameraLock = false;
+    private volatile boolean mSwitchCameraLock = false;
     public static long startWaitTIme, startTime;
 
     private boolean isCanTurnLightFlag = false;
@@ -448,7 +448,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
     @Override
     public void stopRecord() {
-        if (clientState != STATE.RECORDING) {
+        if (clientState != STATE.RECORDING || mSwitchCameraLock) {
             return;
         }
         if (mVideoSource != null) {
@@ -521,7 +521,6 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
             }
             RecoderVideoSource.sync.setForceSyncFlay(true);
             startRecordStep();
-//        ksyRecordSender.clearData();
             KsyRecordSender.getRecordInstance().needResetTs = true;
         } else {
             //current is switching
