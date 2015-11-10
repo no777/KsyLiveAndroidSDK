@@ -19,7 +19,6 @@ import java.util.PriorityQueue;
  * Created by eflakemac on 15/6/26.
  */
 public class KsyRecordSender {
-    public static final int MAX_SEND_FAIL_CONUT = 5;
     //	@AccessedByNative
     public long mNativeRTMP;
 
@@ -42,9 +41,8 @@ public class KsyRecordSender {
     private static volatile int frame_video;
     private static volatile int frame_audio;
 
-    private static final int LEVEL1_QUEUE_SZIE = 100;
-    private static final int LEVEL2_QUEUE_SZIE = 150;
-    private static final int MAX_QUEUE_SIZE = 800;
+    private static final int LEVEL1_QUEUE_SIZE = 150;
+    private static final int LEVEL2_QUEUE_SIZE = 120;
     private static final int MIN_QUEUE_BUFFER = 1;
 
 
@@ -81,6 +79,7 @@ public class KsyRecordSender {
     private long systemStartTime;
 
     public boolean needResetTs = false;
+    private volatile boolean dropNoneIDRFrame = false;
     private SenderListener senderListener;
     private KsyRecordClient.RecordHandler recordHandler;
 
@@ -171,23 +170,11 @@ public class KsyRecordSender {
                 }
                 if (needDropFrame(ksyFlv)) {
                     statDropFrame(ksyFlv);
-//                    clearData();
                 } else {
                     lastRefreshTime = System.currentTimeMillis();
                     waiting(ksyFlv);
-                    Log.e(TAG, "ksyFlv ts=" + ksyFlv.dts + " size=" + ksyFlv.size + " type=" + (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==ADO==" : "**VDO**"));
+//                    Log.e(TAG, "ksyFlv ts=" + ksyFlv.dts + " size=" + ksyFlv.size + " type=" + (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==ADO==" : "**VDO**"));
                     int w = _write(ksyFlv.byteBuffer, ksyFlv.byteBuffer.length);
-//                    Log.d(Constants.LOG_TAG_EF, "count = " + w);
-//                    if (w <= 0) {
-//                        mFailedSendCount++;
-//                        Log.d(Constants.LOG_TAG_EF, "mFailedSendCount = " + mFailedSendCount);
-//                        if (mFailedSendCount >= MAX_SEND_FAIL_CONUT) {
-//                            if (recordHandler != null) {
-//                                recordHandler.sendEmptyMessage(Constants.MESSAGE_SENDER_PUSH_FAILED);
-//                                mFailedSendCount = 0;
-//                            }
-//                        }
-//                    }
                     statBitrate(w, ksyFlv.type);
                 }
             }
@@ -198,41 +185,20 @@ public class KsyRecordSender {
         boolean dropFrame = false;
         int queueSize = recordPQueue.size();
         int dts = ksyFlv.dts;
-        long duration = dts - lastSendVideoDts;
-        if (duration == 0) {
-            duration = 1;
-        }
-        if (queueSize > LEVEL1_QUEUE_SZIE) {
-//            dropFrame = false;
-//        } else if (queueSize < LEVEL2_QUEUE_SZIE) {
-//            if (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO || ksyFlv.isKeyframe()) {
-//                dropFrame = false;
-//            } else {
-//                int needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
-//                dropFrame = (needKps > (avgInstantaneousAudioBitrate + avgInstantaneousVideoBitrate) / 2);
-//            }
-//        } else if (queueSize < MAX_QUEUE_SIZE) {
-//            if (ksyFlv.isKeyframe()) {
-//                dropFrame = false;
-//            } else {
-//                int needKps;
-//                if (ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO) {
-//                    needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
-//                } else {
-//                    needKps = (int) (ksyFlv.size / 1024 * (1000) / duration);
-//                }
-//                dropFrame = (needKps > (avgInstantaneousAudioBitrate + avgInstantaneousVideoBitrate) / 2);
-//            }
-//        } else {
+        if (queueSize > LEVEL2_QUEUE_SIZE || (dropNoneIDRFrame && ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO)) {
             dropFrame = true;
         }
         if (ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO) {
-            lastSendVideoDts = ksyFlv.dts;
+            lastSendVideoDts = dts;
             if (ksyFlv.isKeyframe()) {
+                dropNoneIDRFrame = false;
                 dropFrame = false;
             }
+            if (dropFrame) {
+                dropNoneIDRFrame = true;
+            }
         } else {
-            lastSendAudioDts = ksyFlv.dts;
+            lastSendAudioDts = dts;
         }
         return dropFrame;
     }
@@ -252,7 +218,6 @@ public class KsyRecordSender {
             Log.e(TAG, "statBitrate send frame failed!");
             recordHandler.sendEmptyMessage(Constants.MESSAGE_SENDER_PUSH_FAILED);
         } else {
-            Log.d(TAG, "statBitrate send successful sent =" + sent + "type= " + type);
             long time = System.currentTimeMillis() - lastRefreshTime;
             long escape = System.currentTimeMillis() - last_stat_time;
             time = time == 0 ? 1 : time;
@@ -282,15 +247,34 @@ public class KsyRecordSender {
         }
     }
 
+    private void removeToNextIDRFrame(PriorityQueue<KSYFlvData> recordPQueue) {
+        if (recordPQueue.size() > 0) {
+            KSYFlvData data = recordPQueue.remove();
+            if (data.type == KSYFlvData.FLV_TYPE_VIDEO) {
+                if (data.isKeyframe()) {
+                    recordPQueue.add(data);
+                } else {
+                    removeToNextIDRFrame(recordPQueue);
+                    Log.e(TAG, "removeToNextIDRFrame Video!!! .." + recordPQueue.size());
+                    frame_video--;
+                }
+            } else {
+                Log.e(TAG, "removeToNextIDRFrame Audio*** .." + recordPQueue.size());
+                removeToNextIDRFrame(recordPQueue);
+                recordPQueue.add(data);
+            }
+        }
+    }
+
     private void removeQueue(PriorityQueue<KSYFlvData> recordPQueue) {
-        Log.e(TAG, "removeQueue .." + recordPQueue.size());
-        if (recordPQueue.size() > LEVEL1_QUEUE_SZIE) {
+        if (recordPQueue.size() > 0) {
             KSYFlvData data = recordPQueue.remove();
             if (data.type == KSYFlvData.FLV_TYPE_VIDEO) {
                 if (data.isKeyframe()) {
                     removeQueue(recordPQueue);
                     recordPQueue.add(data);
                 } else {
+                    removeToNextIDRFrame(recordPQueue);
                     frame_video--;
                 }
             } else {
@@ -310,10 +294,8 @@ public class KsyRecordSender {
         KsyMediaSource.sync.setAvDistance(lastAddAudioTs - lastAddVideoTs);
         // add video data
         synchronized (mutex) {
-            if (recordPQueue.size() > LEVEL2_QUEUE_SZIE) {
-                Log.e(TAG, "removeQueue beging.." + recordPQueue.size());
+            if (recordPQueue.size() > LEVEL1_QUEUE_SIZE) {
                 removeQueue(recordPQueue);
-                Log.e(TAG, "removeQueue end.." + recordPQueue.size());
             }
             if (k == FROM_VIDEO) { //视频数据
                 if (needResetTs) {
@@ -328,7 +310,7 @@ public class KsyRecordSender {
                 vidoeFps.tickTock();
                 frame_video++;
                 lastAddVideoTs = ksyFlvData.dts;
-                Log.d(Constants.LOG_TAG, "video_enqueue = " + ksyFlvData.dts + " " + ksyFlvData.isKeyframe());
+//                Log.d(Constants.LOG_TAG, "video_enqueue = " + ksyFlvData.dts + " " + ksyFlvData.isKeyframe());
             } else if (k == FROM_AUDIO) {//音频数据
                 audioFps.tickTock();
                 frame_audio++;
@@ -336,7 +318,6 @@ public class KsyRecordSender {
             }
             recordPQueue.add(ksyFlvData);
         }
-//        Log.e(TAG, "add to QUEUE ts=" + ksyFlvData.dts + " size=" + ksyFlvData.size + " type=" + (ksyFlvData.type == KSYFlvData.FLV_TYTPE_AUDIO ? "==a==" : "**V**"));
     }
 
 
@@ -413,13 +394,11 @@ public class KsyRecordSender {
             return;
         }
         long ideaTime = System.currentTimeMillis() - systemStartTime + ideaStartTime;
-//            Log.e("SenderSync", "type=" + ksyFlvData.type + " ts=" + ts + " ideaTime=" + ideaTime + " d=" + (ts - ideaTime));
         if (Math.abs(ideaTime - ts) > 100) {
             inited = false;
             return;
         }
         while (ts > ideaTime) {
-//            Log.e(TAG, "waiting .." + " ts=" + ts + " ideaTime=" + ideaTime);
             Thread.sleep(1);
             ideaTime = System.currentTimeMillis() - systemStartTime + ideaStartTime;
         }

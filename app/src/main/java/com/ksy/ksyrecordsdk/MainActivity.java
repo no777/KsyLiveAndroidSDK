@@ -287,10 +287,15 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     }
 
     private void toggleFlash() {
-        if (KsyRecordClient.CAMEAR_FLASH_SUCCESS == client.turnLight(flash)) {
+        if (client.canTurnLight()) {
+            if (KsyRecordClient.CAMEAR_FLASH_SUCCESS == client.turnLight(flash)) {
+                showToast("flashlight is" + (!flash));
+            }
             flash = !flash;
-            showToast("flashlight is" + (!flash));
+        } else {
+            showToast("can't turn flash now try it later");
         }
+
 
     }
 

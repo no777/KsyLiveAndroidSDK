@@ -288,16 +288,15 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
         try {
             // 0-3 length,4 type
             int headerResult = fill(header, 0, 4);
-            Log.d(Constants.LOG_TAG, "header size = " + 4 + "header read result = " + headerResult);
-            Log.d(Constants.LOG_TAG, "timestamp = " + ts);
+//            Log.d(Constants.LOG_TAG, "header size = " + 4 + "header read result = " + headerResult);
             length = (header[0] & 0xFF) << 24 | (header[1] & 0xFF) << 16 | (header[2] & 0xFF) << 8 | (header[3] & 0xFF);
             if (length > mConfig.getVideoBitRate() * 5 || length < 0) {
                 return;
             }
-            Log.d(Constants.LOG_TAG, "header length size = " + length + "content length");
+//            Log.d(Constants.LOG_TAG, "header length size = " + length + "content length");
             content.clear();
             int contentLength = readIntoBuffer(content, length);
-            Log.d(Constants.LOG_TAG, "header length = " + length + "content length" + contentLength);
+//            Log.d(Constants.LOG_TAG, "header length = " + length + "content length" + contentLength);
             if (content.limit() > 0) {
                 kFlag = content.get(0);
                 nalutype = kFlag & 0x1F;
@@ -404,10 +403,12 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
         ksyVideo.size = flvFrameByteArray.length;
         ksyVideo.dts = (int) ts;
         ksyVideo.type = 11;
-        ksyVideo.frameType = nalutype;
-
+        if (type == FRAME_TYPE_SPS) {
+            ksyVideo.frameType = KSYFlvData.NALU_TYPE_IDR;
+        }else {
+            ksyVideo.frameType = nalutype;
+        }
         ksyVideoSender.addToQueue(ksyVideo, FROM_VIDEO_DATA);
-
     }
     // Add data here
 

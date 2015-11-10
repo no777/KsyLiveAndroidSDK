@@ -295,8 +295,12 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         if (mCamera == null) {
             return CAMEAR_LIGHT_ERROR;
         }
-
-        Camera.Parameters parameters = mCamera.getParameters();
+        Camera.Parameters parameters = null;
+        try {
+            parameters = mCamera.getParameters();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if (parameters == null) {
             return CAMEAR_LIGHT_ERROR;
         }
@@ -328,7 +332,6 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                 }
             }
         }
-
         return CAMEAR_NO_FLASH;
     }
 
@@ -493,6 +496,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     @Override
     public void switchCamera() {
         if (!mSwitchCameraLock && clientState == STATE.RECORDING) {
+            turnLight(false);
             setSwitchCameraState(true);
             isCanTurnLightFlag = false;
             if (mSwitchCameraStateListener != null) {
@@ -560,8 +564,8 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                 case Constants.MESSAGE_MP4CONFIG_START_PREVIEW:
                     break;
                 case Constants.MESSAGE_SWITCH_CAMERA_FINISH:
+                    isCanTurnLightFlag = true;
                     if (mSwitchCameraLock) {
-                        isCanTurnLightFlag = true;
                         mSwitchCameraLock = false;
                         if (mSwitchCameraStateListener != null) {
                             mSwitchCameraStateListener.onSwitchCameraEnable();
