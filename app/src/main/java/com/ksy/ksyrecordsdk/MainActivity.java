@@ -92,17 +92,6 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
 //        isFirstEnter = false;
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        showToast("onPause");
-        orientationObserver.disable();
-        // for disable network monitor
-        client.unregisterNetworkMonitor();
-        if (mRecording) {
-            stopRecord();
-        }
-    }
 
     private void initOrientationSensor() {
         orientationObserver = new OrientationObserver(this) {
@@ -311,6 +300,12 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     @Override
     protected void onStop() {
         super.onStop();
+        showToast("onStop");
+        orientationObserver.disable();
+        client.unregisterNetworkMonitor();
+        if (mRecording) {
+            stopRecord();
+        }
     }
 
     @Override

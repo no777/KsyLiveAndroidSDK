@@ -252,8 +252,12 @@ public class KsyRecordClientConfig {
         if (mVideoWidth > 0 && mVideoHeight > 0) {
             mediaRecorder.setVideoSize(mVideoWidth, mVideoHeight);
         }
-        int previewDegree = CameraUtil.getDisplayOrientation(orientationActivity.getActivity(), cameraId, mCameraType == Camera.CameraInfo.CAMERA_FACING_FRONT);
-        recordOrientation = CameraUtil.getMediaRecordRotation(previewDegree, orientationActivity.getOrientation(), mCameraType == Camera.CameraInfo.CAMERA_FACING_FRONT);
+        if (orientationActivity != null) {
+            int previewDegree = CameraUtil.getDisplayOrientation(orientationActivity.getActivity(), cameraId, mCameraType == Camera.CameraInfo.CAMERA_FACING_FRONT);
+            recordOrientation = CameraUtil.getMediaRecordRotation(previewDegree, orientationActivity.getOrientation(), mCameraType == Camera.CameraInfo.CAMERA_FACING_FRONT);
+        } else {
+            recordOrientation = 90;
+        }
         mediaRecorder.setOrientationHint(recordOrientation);
     }
 
