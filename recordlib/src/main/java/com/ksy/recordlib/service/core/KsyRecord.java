@@ -13,7 +13,12 @@ import com.ksy.recordlib.service.exception.KsyRecordException;
 public interface KsyRecord {
     void startRecord() throws KsyRecordException;
 
-    void stopRecord();
+    /**
+     * stop recorder
+     *
+     * @return true is success
+     */
+    boolean stopRecord();
 
     void release();
 

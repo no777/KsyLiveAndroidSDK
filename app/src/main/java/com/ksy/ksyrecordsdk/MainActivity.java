@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     @Override
     public void onPause() {
         super.onPause();
+        showToast("onPause");
         orientationObserver.disable();
         // for disable network monitor
         client.unregisterNetworkMonitor();
@@ -261,10 +262,11 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     }
 
     private void stopRecord() {
-        mFab.setImageDrawable(getResources().getDrawable(R.mipmap.btn_record));
-        client.stopRecord();
-        mRecording = false;
-        Log.d(Constants.LOG_TAG, "stop and release");
+        if (client.stopRecord()) {
+            mFab.setImageDrawable(getResources().getDrawable(R.mipmap.btn_record));
+            mRecording = false;
+            showToast("stop success");
+        }
     }
 
     private void startRecord() {
@@ -295,12 +297,9 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         } else {
             showToast("can't turn flash now try it later");
         }
-
-
     }
 
     private void changeCamera() {
-        Log.d(Constants.LOG_TAG, "changeCamera===== ");
         client.switchCamera();
     }
 

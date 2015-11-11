@@ -284,6 +284,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         if (mConfig == null) {
             throw new KsyRecordException("should set KsyRecordConfig first");
         }
+        if (mSurfaceView == null && mTextureView == null) {
+            throw new KsyRecordException("preview surface or texture must be set first");
+        }
         return mConfig.validateParam();
     }
 
@@ -371,17 +374,18 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                 }
                 mCamera.setParameters(parameters);
                 if (needPreview) {
-                    params.height = optimalSize.height;
-                    params.width = optimalSize.width;
-                    mSurfaceView.setLayoutParams(params);
-                    parameters.setPreviewSize(optimalSize.width, optimalSize.height);
-
-                    if (mSurfaceView != null) {
-                        mCamera.setPreviewDisplay(mSurfaceView.getHolder());
-                    } else if (mTextureView != null) {
-                        mCamera.setPreviewTexture(mTextureView.getSurfaceTexture());
+                    params.height = mSurfaceView == null ? mTextureView.getHeight() : mSurfaceView.getHeight();
+                    params.width = mSurfaceView == null ? mTextureView.getWidth() : mSurfaceView.getWidth();
+                    parameters.setPreviewSize(params.width, params.height);
+                    try {
+                        if (mSurfaceView != null) {
+                            mCamera.setPreviewDisplay(mSurfaceView.getHolder());
+                        } else if (mTextureView != null) {
+                            mCamera.setPreviewTexture(mTextureView.getSurfaceTexture());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-
                 }
             }
             // Here we reuse camera, just unlock it
@@ -447,9 +451,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
 
     @Override
-    public void stopRecord() {
+    public boolean stopRecord() {
         if (clientState != STATE.RECORDING || mSwitchCameraLock) {
-            return;
+            return false;
         }
         if (mVideoSource != null) {
             mVideoSource.stop();
@@ -470,6 +474,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         ksyRecordSender.disconnect();
         clientState = STATE.STOP;
         isCanTurnLightFlag = false;
+        return true;
     }
 
     @Override
