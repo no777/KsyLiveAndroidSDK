@@ -357,7 +357,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                 }
                 displayOrientation = CameraUtil.getDisplayOrientation(0, currentCameraId);
                 KsyRecordClientConfig.previewOrientation = displayOrientation;
-                Log.d(Constants.LOG_TAG_EF, "current displayOrientation = " + displayOrientation);
+                Log.d(TAG, "current displayOrientation = " + displayOrientation);
                 mCamera.setDisplayOrientation(displayOrientation);
                 Camera.Parameters parameters = mCamera.getParameters();
                 if (mCameraSizeChangedListener != null)
@@ -578,7 +578,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                     }
                     break;
                 case Constants.MESSAGE_SENDER_PUSH_FAILED:
-                    Log.d(Constants.LOG_TAG_EF, "server send push fail");
+                    Log.d(TAG, "server send push fail");
                     if (mPushStreamStateListener != null) {
                         mPushStreamStateListener.onPushStreamState(Constants.PUSH_STATE_FAILED);
                     }

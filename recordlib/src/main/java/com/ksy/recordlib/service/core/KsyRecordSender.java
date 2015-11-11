@@ -378,7 +378,7 @@ public class KsyRecordSender {
             } else {
                 senderListener.onStartFailed();
             }
-            Log.e(Constants.LOG_TAG_EF, "connected .. open result=" + k);
+            Log.e(TAG, "connected .. open result=" + k);
         }
     }
 

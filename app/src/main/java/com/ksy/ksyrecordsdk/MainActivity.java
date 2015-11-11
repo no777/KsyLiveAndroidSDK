@@ -45,6 +45,7 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity implements OrientationActivity, KsyRecordClient.NetworkChangeListener, KsyRecordClient.PushStreamStateListener, KsyRecordClient.SwitchCameraStateListener, KsyRecordClient.StartListener {
 
     private static final boolean DEBUG = true;
+    private static final String TAG = "MainActivity";
     private CameraSurfaceView mSurfaceView;
     private FloatingActionButton mFab, change, flashlight;
     private boolean mRecording = false;
@@ -395,6 +396,6 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
 
     private void showToast(String text) {
         Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
-        Log.d(Constants.LOG_TAG_EF, text);
+        Log.d(TAG, text);
     }
 }

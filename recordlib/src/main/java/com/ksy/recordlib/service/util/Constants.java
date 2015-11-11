@@ -5,9 +5,7 @@ package com.ksy.recordlib.service.util;
  */
 public class Constants {
     public static final String LOG_TAG = "ksy-record-sdk";
-    public static final String LOG_TAG_EF = "eflake";
-    // Voice Encode Default
-//    public static final String URL_DEFAULT = "rtmp://xiaoyi.uplive.ksyun.com:80/live/hansen2?public=1&expire=1710333230&nonce=12341234&accesskey=2HITWMQXL2VBB3XMAEHQ&signature=1wgD2F56CDUizTp0%2fj3DJ%2fasSsY%3d";
+    //    public static final String URL_DEFAULT = "rtmp://xiaoyi.uplive.ksyun.com:80/live/hansen2?public=1&expire=1710333230&nonce=12341234&accesskey=2HITWMQXL2VBB3XMAEHQ&signature=1wgD2F56CDUizTp0%2fj3DJ%2fasSsY%3d";
 //    public static final String URL_DEFAULT = "rtmp://115.231.96.121:80/live/hansen223?public=1&expire=1710333230&nonce=12341234&accesskey=2HITWMQXL2VBB3XMAEHQ&signature=1wgD2F56CDUizTp0%2fj3DJ%2fasSsY%3d";
 //    public static final String URL_DEFAULT = "rtmp://180.76.140.24/live/eflaketest";
     public static final String URL_DEFAULT = "rtmp://uplive.ksyun.com/live/eflake_test2";
