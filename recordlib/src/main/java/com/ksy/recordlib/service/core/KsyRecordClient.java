@@ -1,3 +1,4 @@
+
 package com.ksy.recordlib.service.core;
 
 import android.content.BroadcastReceiver;
@@ -108,10 +109,10 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
     @Override
     public void onClientError(int source, int what) {
+        stopRecord(true);
         if (onClientErrorListener != null) {
             onClientErrorListener.onClientError(source, what);
         }
-        stopRecord();
     }
 
     private KsyRecordClient() {
@@ -257,14 +258,14 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     }
 
     private void startRecordStep() {
-        setUpCamera(true);
-        setUpEncoder();
+        if (setUpCamera(true)) {
+            setUpEncoder();
+        }
     }
 
 
     private void setUpMp4Config(RecordHandler mRecordHandler) {
-        setUpCamera(true);
-        if (mVideoTempSource == null) {
+        if (setUpCamera(true) && (mVideoTempSource == null)) {
             mVideoTempSource = new RecoderVideoTempSource(mCamera, mConfig, mSurfaceView, mRecordHandler, mContext);
             mVideoTempSource.setOnClientErrorListener(this);
             mVideoTempSource.start();
@@ -339,7 +340,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     }
 
 
-    private void setUpCamera(boolean needPreview) {
+    private boolean setUpCamera(boolean needPreview) {
         try {
             if (mCamera == null) {
                 int numberOfCameras = Camera.getNumberOfCameras();
@@ -354,6 +355,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                     }
                 } else {
                     mCamera = Camera.open();
+                }
+                if (mCamera == null) {
+                    return false;
                 }
                 displayOrientation = CameraUtil.getDisplayOrientation(0, currentCameraId);
                 KsyRecordClientConfig.previewOrientation = displayOrientation;
@@ -385,6 +389,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        return false;
                     }
                 }
             }
@@ -393,7 +398,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         } catch (Exception e) {
             onClientError(SOURCE_CLIENT, ERROR_CAMERA_START_FAILED);
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     private void setUpEncoder() {
@@ -452,7 +459,11 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
     @Override
     public boolean stopRecord() {
-        if (clientState != STATE.RECORDING || mSwitchCameraLock) {
+        return stopRecord(false);
+    }
+
+    public boolean stopRecord(boolean ignoreState) {
+        if ((clientState != STATE.RECORDING || mSwitchCameraLock) && (!ignoreState)) {
             return false;
         }
         if (mVideoSource != null) {
@@ -468,7 +479,11 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
             mAudioSource = null;
         }
         if (mCamera != null) {
-            mCamera.release();
+            try {
+                mCamera.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             mCamera = null;
         }
         ksyRecordSender.disconnect();
