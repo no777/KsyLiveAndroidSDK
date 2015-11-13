@@ -98,24 +98,32 @@ public class MP4Parser {
         }
     }
 
+    private long getExtentBoxLength() throws IOException {
+        long currentPos = file.getFilePointer();
+        byte[] buffer = new byte[8];
+        file.read(buffer, 0, 8);
+        file.seek(currentPos);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, 8);
+        return byteBuffer.getLong();
+    }
+
     private void parse(String path, long len) throws IOException {
         byte[] buffer = new byte[8];
         String name = "";
         long sum = 0, newlen = 0;
         if (!path.equals(""))
             boxes.put(path, pos - 8);
-
-
         while (sum < len) {
-
             file.read(buffer, 0, 8);
             sum += 8;
             pos += 8;
             if (validBoxName(buffer)) {
-
                 ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, 4);
-                newlen = byteBuffer.getInt() - 8;
-
+                long bufferInt = byteBuffer.getInt();
+                if (bufferInt == 1) {
+                    bufferInt = getExtentBoxLength();
+                }
+                newlen = bufferInt - 8;
                 // 1061109559+8 correspond to "????" in ASCII the HTC Desire S seems to write that sometimes, maybe other phones do
                 // "wide" atom would produce a newlen == 0, and we shouldn't throw an exception because of that
                 if (newlen < 0 || newlen == 1061109559) throw new IOException();

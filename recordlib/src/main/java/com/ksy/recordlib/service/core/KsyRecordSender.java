@@ -41,8 +41,8 @@ public class KsyRecordSender {
     private static volatile int frame_video;
     private static volatile int frame_audio;
 
-    private static final int LEVEL1_QUEUE_SIZE = 150;
-    private static final int LEVEL2_QUEUE_SIZE = 120;
+    private static final int LEVEL1_QUEUE_SIZE = 200;
+    private static final int LEVEL2_QUEUE_SIZE = 150;
     private static final int MIN_QUEUE_BUFFER = 1;
 
 
