@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.ksy.recordlib.service.data.SenderStatData;
 import com.ksy.recordlib.service.util.Constants;
 import com.ksy.recordlib.service.util.NetworkMonitor;
 import com.ksy.recordlib.service.util.URLConverter;
@@ -33,36 +34,15 @@ public class KsyRecordSender {
 
     private Object mutex = new Object();
     private Context mContext;
+    private SenderStatData statData = new SenderStatData();
 
     private static final int FIRST_OPEN = 3;
     private static final int FROM_AUDIO = 8;
     private static final int FROM_VIDEO = 6;
 
-    private static volatile int frame_video;
-    private static volatile int frame_audio;
-
-    private static final int LEVEL1_QUEUE_SIZE = 200;
-    private static final int LEVEL2_QUEUE_SIZE = 150;
-    private static final int MIN_QUEUE_BUFFER = 1;
-
 
     private static KsyRecordSender ksyRecordSenderInstance = new KsyRecordSender();
 
-    /**
-     * this is instantaneous value of video/audio bitrate
-     */
-    private float currentVideoBitrate, currentAudioBitrate = 0;
-    /**
-     * producer bitrate
-     */
-    private float encodeVideoBitrate, encodeAudioBitrate;
-    /**
-     * this is average instantaneous value of video/audio bitrate during last second
-     */
-    private float avgInstantaneousVideoBitrate, avgInstantaneousAudioBitrate;
-    private int videoByteSum, audioByteSum;
-    private long videoTime, audioTime;
-    private long last_stat_time;
     private long lastRefreshTime;
     private long lastSendVideoDts;
     private long lastSendAudioDts;
@@ -117,10 +97,9 @@ public class KsyRecordSender {
     }
 
     public String getAVBitrate() {
-        return "\nwait=" + KsyRecordClient.startWaitTIme + " curTransferVideoBr=" + currentVideoBitrate +
-                ", curTransferAudiobr:" + currentAudioBitrate +
-                "\n,vFps =" + vidoeFps.getSpeed() + " aFps=" + audioFps.getSpeed() + " dropA:" + dropAudioCount + " dropV" + dropVideoCount +
-                "\n, lastStAudioTs:" + lastSendAudioTs + "stAvDist=" + (lastSendAudioTs - lastSendVideoDts) + ",size=" + recordPQueue.size() + "\nf_v=" + frame_video + " f_a=" + frame_audio + "\n" + KsyMediaSource.sync.lastMessage;
+        return "\nwait=" + KsyRecordClient.startWaitTIme + "a.b=" + statData.audio_byte_count + " v.b=" + statData.video_byte_count +
+                "\n,vFps =" + vidoeFps.getSpeed() + " aFps=" + audioFps.getSpeed() + " dropA:" + dropAudioCount + " dropV:" + dropVideoCount + " sendS:" + statData.getLastTimeSendByteCount() +
+                "\n, lastStAudioTs:" + lastSendAudioTs + "stAvDist=" + (lastSendAudioTs - lastSendVideoDts) + "\n,size=" + recordPQueue.size() + " f_v=" + statData.frame_video + " f_a=" + statData.frame_audio + "\n" + KsyMediaSource.sync.lastMessage;
     }
 
     public void start(Context pContext) throws IOException {
@@ -148,22 +127,20 @@ public class KsyRecordSender {
             while (!connected) {
                 Thread.sleep(10);
             }
-            if (frame_video > MIN_QUEUE_BUFFER && frame_audio > MIN_QUEUE_BUFFER || recordPQueue.size() > 30) {
+            if (statData.frame_video > statData.MIN_QUEUE_BUFFER && statData.frame_audio > statData.MIN_QUEUE_BUFFER || recordPQueue.size() > 30) {
                 KSYFlvData ksyFlv = null;
                 synchronized (mutex) {
                     if (recordPQueue.size() > 0) {
                         ksyFlv = recordPQueue.remove();
                     } else {
-                        frame_audio = 0;
-                        frame_video = 0;
+                        statData.clear();
                         continue;
                     }
                 }
+                statData.remove(ksyFlv);
                 if (ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO) {
-                    frame_video--;
                     lastSendVideoTs = ksyFlv.dts;
                 } else if (ksyFlv.type == KSYFlvData.FLV_TYTPE_AUDIO) {
-                    frame_audio--;
                     lastSendAudioTs = ksyFlv.dts;
                 }
                 if (needDropFrame(ksyFlv)) {
@@ -183,7 +160,7 @@ public class KsyRecordSender {
         boolean dropFrame = false;
         int queueSize = recordPQueue.size();
         int dts = ksyFlv.dts;
-        if (queueSize > LEVEL2_QUEUE_SIZE || (dropNoneIDRFrame && ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO)) {
+        if (queueSize > statData.LEVEL2_QUEUE_SIZE || (dropNoneIDRFrame && ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO)) {
             dropFrame = true;
         }
         if (ksyFlv.type == KSYFlvData.FLV_TYPE_VIDEO) {
@@ -217,32 +194,12 @@ public class KsyRecordSender {
             recordHandler.sendEmptyMessage(Constants.MESSAGE_SENDER_PUSH_FAILED);
         } else {
             long time = System.currentTimeMillis() - lastRefreshTime;
-            long escape = System.currentTimeMillis() - last_stat_time;
             time = time == 0 ? 1 : time;
-            if (type == 11) {
-                currentVideoBitrate = sent / (time);
-                videoByteSum += sent;
-                videoTime += time;
-            } else if (type == 12) {
-                currentAudioBitrate = sent / (time);
-                audioByteSum += sent;
-                audioTime += time;
-            }
             if (time > 500) {
                 sendPoorNetworkMessage(NetworkMonitor.OnNetworkPoorListener.FRAME_SEND_TOO_LONG);
                 Log.e(TAG, "statBitrate time > 500ms network maybe poor! Time use:" + time);
             }
-            if (escape > 1000) {
-                encodeVideoBitrate = (float) videoByteSum / escape;
-                encodeAudioBitrate = (float) audioByteSum / escape;
-                avgInstantaneousVideoBitrate = (float) videoByteSum / videoTime;
-                avgInstantaneousAudioBitrate = (float) audioByteSum / audioTime;
-                videoByteSum = 0;
-                videoTime = 0;
-                audioByteSum = 0;
-                audioTime = 0;
-                last_stat_time = System.currentTimeMillis();
-            }
+            statData.lastTimeSendByteCount += sent;
         }
     }
 
@@ -260,11 +217,11 @@ public class KsyRecordSender {
                 if (data.isKeyframe()) {
                     recordPQueue.add(data);
                 } else {
-                    frame_video--;
+                    statData.remove(data);
                     removeToNextIDRFrame(recordPQueue);
                 }
             } else {
-                frame_audio--;
+                statData.remove(data);
                 removeToNextIDRFrame(recordPQueue);
             }
         }
@@ -273,14 +230,10 @@ public class KsyRecordSender {
     private void removeQueue(PriorityQueue<KSYFlvData> recordPQueue) {
         if (recordPQueue.size() > 0) {
             KSYFlvData data = recordPQueue.remove();
-            if (data.type == KSYFlvData.FLV_TYPE_VIDEO) {
-                if (data.isKeyframe()) {
-                    removeToNextIDRFrame(recordPQueue);
-                    frame_video--;
-                }
-            } else {
-                frame_audio--;
+            if (data.type == KSYFlvData.FLV_TYPE_VIDEO && data.isKeyframe()) {
+                removeToNextIDRFrame(recordPQueue);
             }
+            statData.remove(data);
         }
     }
 
@@ -295,7 +248,7 @@ public class KsyRecordSender {
         KsyMediaSource.sync.setAvDistance(lastAddAudioTs - lastAddVideoTs);
         // add video data
         synchronized (mutex) {
-            if (recordPQueue.size() > LEVEL1_QUEUE_SIZE) {
+            if (recordPQueue.size() > statData.LEVEL1_QUEUE_SIZE) {
                 removeQueue(recordPQueue);
                 sendPoorNetworkMessage(NetworkMonitor.OnNetworkPoorListener.CACHE_QUEUE_MAX);
             }
@@ -310,14 +263,13 @@ public class KsyRecordSender {
                     ksyFlvData.dts = lastAddVideoTs;
                 }
                 vidoeFps.tickTock();
-                frame_video++;
                 lastAddVideoTs = ksyFlvData.dts;
 //                Log.d(Constants.LOG_TAG, "video_enqueue = " + ksyFlvData.dts + " " + ksyFlvData.isKeyframe());
             } else if (k == FROM_AUDIO) {//音频数据
                 audioFps.tickTock();
-                frame_audio++;
                 lastAddAudioTs = ksyFlvData.dts;
             }
+            statData.add(ksyFlvData);
             recordPQueue.add(ksyFlvData);
         }
     }
@@ -362,8 +314,7 @@ public class KsyRecordSender {
             worker.interrupt();
         }
         recordPQueue.clear();
-        frame_video = 0;
-        frame_audio = 0;
+        statData.clear();
         connected = false;
         LocalBroadcastManager.getInstance(mContext).unregisterReceiver(receiver);
     }
@@ -415,8 +366,7 @@ public class KsyRecordSender {
     public void clearData() {
         synchronized (mutex) {
             recordPQueue.clear();
-            frame_video = 0;
-            frame_audio = 0;
+            statData.clear();
         }
         inited = false;
     }

@@ -36,13 +36,14 @@ import com.ksy.recordlib.service.core.KsyRecordClientConfig;
 import com.ksy.recordlib.service.core.KsyRecordSender;
 import com.ksy.recordlib.service.exception.KsyRecordException;
 import com.ksy.recordlib.service.util.Constants;
+import com.ksy.recordlib.service.util.OnClientErrorListener;
 import com.ksy.recordlib.service.util.OrientationActivity;
 import com.ksy.recordlib.service.util.OrientationObserver;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity implements OrientationActivity, KsyRecordClient.NetworkChangeListener, KsyRecordClient.PushStreamStateListener, KsyRecordClient.SwitchCameraStateListener, KsyRecordClient.StartListener {
+public class MainActivity extends AppCompatActivity implements OrientationActivity, KsyRecordClient.NetworkChangeListener, KsyRecordClient.PushStreamStateListener, KsyRecordClient.SwitchCameraStateListener, KsyRecordClient.StartListener, OnClientErrorListener {
 
     private static final boolean DEBUG = true;
     private static final String TAG = "MainActivity";
@@ -249,6 +250,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         client.setPushStreamStateListener(this);
         client.setSwitchCameraStateListener(this);
         client.setStartListener(this);
+        client.setOnClientErrorListener(this);
     }
 
     private void stopRecord() {
@@ -393,5 +395,10 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     private void showToast(String text) {
         Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
         Log.d(TAG, text);
+    }
+
+    @Override
+    public void onClientError(int source, int what) {
+        Toast.makeText(MainActivity.this, "onClientError" + source, Toast.LENGTH_SHORT).show();
     }
 }
