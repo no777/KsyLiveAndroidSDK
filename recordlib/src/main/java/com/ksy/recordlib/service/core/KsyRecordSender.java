@@ -80,11 +80,12 @@ public class KsyRecordSender {
 
     public boolean needResetTs = false;
     private volatile boolean dropNoneIDRFrame = false;
-    private SenderListener senderListener;
     private KsyRecordClient.RecordHandler recordHandler;
 
     private Speedometer vidoeFps = new Speedometer();
     private Speedometer audioFps = new Speedometer();
+    private long lastPoorNotificationTime = 0;
+    private String inputUrl = "";
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -111,11 +112,6 @@ public class KsyRecordSender {
         });
     }
 
-    public void setSenderListener(SenderListener l) {
-        senderListener = l;
-    }
-
-
     public static KsyRecordSender getRecordInstance() {
         return ksyRecordSenderInstance;
     }
@@ -135,6 +131,7 @@ public class KsyRecordSender {
             @Override
             public void run() {
                 try {
+                    setRecorderData();
                     cycle();
                 } catch (Exception e) {
                     Log.e(Constants.LOG_TAG, "worker: thread exception. e＝" + e);
@@ -144,6 +141,7 @@ public class KsyRecordSender {
         });
         worker.start();
     }
+
 
     private void cycle() throws InterruptedException {
         while (!Thread.interrupted()) {
@@ -231,6 +229,7 @@ public class KsyRecordSender {
                 audioTime += time;
             }
             if (time > 500) {
+                sendPoorNetworkMessage(NetworkMonitor.OnNetworkPoorListener.FRAME_SEND_TOO_LONG);
                 Log.e(TAG, "statBitrate time > 500ms network maybe poor! Time use:" + time);
             }
             if (escape > 1000) {
@@ -247,6 +246,13 @@ public class KsyRecordSender {
         }
     }
 
+    private void sendPoorNetworkMessage(int reason) {
+        if (System.currentTimeMillis() - lastPoorNotificationTime > 3000 && recordHandler != null) {
+            recordHandler.sendEmptyMessage(reason);
+            lastPoorNotificationTime = System.currentTimeMillis();
+        }
+    }
+
     private void removeToNextIDRFrame(PriorityQueue<KSYFlvData> recordPQueue) {
         if (recordPQueue.size() > 0) {
             KSYFlvData data = recordPQueue.remove();
@@ -254,14 +260,12 @@ public class KsyRecordSender {
                 if (data.isKeyframe()) {
                     recordPQueue.add(data);
                 } else {
-                    removeToNextIDRFrame(recordPQueue);
-                    Log.e(TAG, "removeToNextIDRFrame Video!!! .." + recordPQueue.size());
                     frame_video--;
+                    removeToNextIDRFrame(recordPQueue);
                 }
             } else {
-                Log.e(TAG, "removeToNextIDRFrame Audio*** .." + recordPQueue.size());
+                frame_audio--;
                 removeToNextIDRFrame(recordPQueue);
-                recordPQueue.add(data);
             }
         }
     }
@@ -271,9 +275,6 @@ public class KsyRecordSender {
             KSYFlvData data = recordPQueue.remove();
             if (data.type == KSYFlvData.FLV_TYPE_VIDEO) {
                 if (data.isKeyframe()) {
-                    removeQueue(recordPQueue);
-                    recordPQueue.add(data);
-                } else {
                     removeToNextIDRFrame(recordPQueue);
                     frame_video--;
                 }
@@ -296,6 +297,7 @@ public class KsyRecordSender {
         synchronized (mutex) {
             if (recordPQueue.size() > LEVEL1_QUEUE_SIZE) {
                 removeQueue(recordPQueue);
+                sendPoorNetworkMessage(NetworkMonitor.OnNetworkPoorListener.CACHE_QUEUE_MAX);
             }
             if (k == FROM_VIDEO) { //视频数据
                 if (needResetTs) {
@@ -338,9 +340,13 @@ public class KsyRecordSender {
             int result = _open();
             connected = result == 0;
             if (connected) {
-                senderListener.onStartComplete();
+                if (recordHandler != null) {
+                    recordHandler.sendEmptyMessage(KsyRecordClient.StartListener.START_COMPLETE);
+                }
             } else {
-                senderListener.onStartFailed();
+                if (recordHandler != null) {
+                    recordHandler.sendEmptyMessage(KsyRecordClient.StartListener.START_FAILED);
+                }
             }
             Log.e(TAG, "opens result ..>" + result);
         }
@@ -362,24 +368,26 @@ public class KsyRecordSender {
         LocalBroadcastManager.getInstance(mContext).unregisterReceiver(receiver);
     }
 
-    public void setRecorderData(String url, int j) {
+    public void setRecorderData() {
         if (connected) {
             return;
         }
-        mUrl = URLConverter.convertUrl(url);
+        mUrl = URLConverter.convertUrl(inputUrl);
         int i = _set_output_url(mUrl);
-        Log.e(TAG, "_set_output_url .." + i + " url=" + mUrl);
+        Log.e(TAG, "_set_output_url .." + i + " inputUrl=" + mUrl);
         //3视频  0音频
-        if (j == FIRST_OPEN) {
-            int k = _open();
-            connected = k == 0;
-            if (connected) {
-                senderListener.onStartComplete();
-            } else {
-                senderListener.onStartFailed();
+        int k = _open();
+        connected = k == 0;
+        if (connected) {
+            if (recordHandler != null) {
+                recordHandler.sendEmptyMessage(KsyRecordClient.StartListener.START_COMPLETE);
             }
-            Log.e(TAG, "connected .. open result=" + k);
+        } else {
+            if (recordHandler != null) {
+                recordHandler.sendEmptyMessage(KsyRecordClient.StartListener.START_FAILED);
+            }
         }
+        Log.e(TAG, "connected .. open result=" + k);
     }
 
     public void waiting(KSYFlvData ksyFlvData) throws InterruptedException {
@@ -413,13 +421,6 @@ public class KsyRecordSender {
         inited = false;
     }
 
-    public interface SenderListener {
-        void onStartComplete();
-
-        void onStartFailed();
-    }
-
-
     private native int _set_output_url(String url);
 
     private native int _open();
@@ -432,6 +433,10 @@ public class KsyRecordSender {
         this.recordHandler = recordHandler;
     }
 
+    public KsyRecordSender setInputUrl(String inputUrl) {
+        this.inputUrl = inputUrl;
+        return this;
+    }
 
     public static class Speedometer {
         private int time;

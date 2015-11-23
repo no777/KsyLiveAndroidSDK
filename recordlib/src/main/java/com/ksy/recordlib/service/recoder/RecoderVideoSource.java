@@ -82,7 +82,6 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
         this.mContext = mContext;
 
         ksyVideoSender = KsyRecordSender.getRecordInstance();
-        ksyVideoSender.setRecorderData(mConfig.getUrl(), VIDEO_TAG);
         Log.d(Constants.LOG_TAG, "test");
     }
 

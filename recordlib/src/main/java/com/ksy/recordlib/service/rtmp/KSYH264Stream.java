@@ -1,14 +1,14 @@
 package com.ksy.recordlib.service.rtmp;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
 import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.os.Build;
 import android.util.Log;
 
 import com.ksy.recordlib.service.util.Constants;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 public class KSYH264Stream {
 

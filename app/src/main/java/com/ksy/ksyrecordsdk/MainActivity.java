@@ -260,6 +260,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     }
 
     private void startRecord() {
+        Log.d(Constants.LOG_TAG, "startRecord..");
         try {
             client.startRecord();
             mRecording = true;

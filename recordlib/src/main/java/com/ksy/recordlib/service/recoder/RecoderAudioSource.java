@@ -76,8 +76,6 @@ public class RecoderAudioSource extends KsyMediaSource implements MediaRecorder.
         this.mContext = mContext;
         mRecorder = new MediaRecorder();
         ksyRecordSender = KsyRecordSender.getRecordInstance();
-        ksyRecordSender.setRecorderData(mConfig.getUrl(), AUDIO_TAG);
-
     }
 
     @Override

@@ -44,7 +44,6 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         mHandler = mRecordHandler;
         this.mContext = mContext;
         ksyVideoTempSender = KsyRecordSender.getRecordInstance();
-        ksyVideoTempSender.setRecorderData(mConfig.getUrl(), VIDEO_TEMP);
     }
 
     @Override
@@ -91,7 +90,7 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
     @Override
     public void release() {
         releaseRecorder();
-        reconnectCamera();
+//        reconnectCamera();
     }
 
     private void reconnectCamera() {
@@ -116,7 +115,7 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
                 Log.d(Constants.LOG_TAG, "mRecorder release");
                 mRecorder = null;
                 Log.d(Constants.LOG_TAG, "mRecorder complete");
-                mCamera.lock();
+//                mCamera.lock();
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -1,4 +1,3 @@
-
 package com.ksy.recordlib.service.core;
 
 import android.content.BroadcastReceiver;
@@ -22,6 +21,7 @@ import com.ksy.recordlib.service.recoder.RecoderVideoTempSource;
 import com.ksy.recordlib.service.rtmp.KSYRtmpFlvClient;
 import com.ksy.recordlib.service.util.CameraUtil;
 import com.ksy.recordlib.service.util.Constants;
+import com.ksy.recordlib.service.util.NetworkMonitor;
 import com.ksy.recordlib.service.util.OnClientErrorListener;
 import com.ksy.recordlib.service.util.OrientationActivity;
 
@@ -67,6 +67,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     private PushStreamStateListener mPushStreamStateListener;
     private SwitchCameraStateListener mSwitchCameraStateListener;
     private OnClientErrorListener onClientErrorListener;
+    private NetworkMonitor.OnNetworkPoorListener onNetworkPoorListener;
 
     public static final int NETWORK_UNAVAILABLE = -1;
     public static final int NETWORK_WIFI = 1;
@@ -101,6 +102,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     }
 
     public interface StartListener {
+        int START_COMPLETE = 23;
+        int START_FAILED = 24;
+
         void OnStartComplete();
 
         void OnStartFailed();
@@ -109,10 +113,10 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
     @Override
     public void onClientError(int source, int what) {
-        stopRecord(true);
         if (onClientErrorListener != null) {
             onClientErrorListener.onClientError(source, what);
         }
+        stopRecord();
     }
 
     private KsyRecordClient() {
@@ -123,24 +127,18 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         mRecordHandler = new RecordHandler();
         ksyRecordSender = KsyRecordSender.getRecordInstance();
         ksyRecordSender.setStateMonitor(mRecordHandler);
-        ksyRecordSender.setSenderListener(new KsyRecordSender.SenderListener() {
-            @Override
-            public void onStartComplete() {
-                if (startListener != null) {
-                    startListener.OnStartComplete();
-                }
-            }
 
-            @Override
-            public void onStartFailed() {
-                if (startListener != null) {
-                    startListener.OnStartFailed();
-                }
-            }
-        });
 
         // Remove old network monitor
         // NetworkMonitor.start(context);
+    }
+
+    public void takePicture(Camera.PictureCallback callback) {
+        try {
+            mCamera.takePicture(null, null, callback);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void registerNetworkMonitor() {
@@ -225,10 +223,15 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         return this;
     }
 
+    public KsyRecordClient setOnNetworkPoorListener(NetworkMonitor.OnNetworkPoorListener onNetworkPoorListener) {
+        this.onNetworkPoorListener = onNetworkPoorListener;
+        return this;
+    }
+
     /*
-                *
-                * Ks3 Record API
-                * */
+                    *
+                    * Ks3 Record API
+                    * */
     @Override
     public void startRecord() throws KsyRecordException {
         if (clientState == STATE.RECORDING) {
@@ -238,6 +241,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         mEncodeMode = judgeEncodeMode(mContext);
         try {
             mConfig.setOrientationActivity(orientationActivity);
+            ksyRecordSender.setInputUrl(mConfig.getUrl());
             ksyRecordSender.start(mContext);
         } catch (IOException e) {
             e.printStackTrace();
@@ -265,10 +269,12 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
 
     private void setUpMp4Config(RecordHandler mRecordHandler) {
-        if (setUpCamera(true) && (mVideoTempSource == null)) {
-            mVideoTempSource = new RecoderVideoTempSource(mCamera, mConfig, mSurfaceView, mRecordHandler, mContext);
-            mVideoTempSource.setOnClientErrorListener(this);
-            mVideoTempSource.start();
+        if (setUpCamera(true)) {
+            if (mVideoTempSource == null) {
+                mVideoTempSource = new RecoderVideoTempSource(mCamera, mConfig, mSurfaceView, mRecordHandler, mContext);
+                mVideoTempSource.setOnClientErrorListener(this);
+                mVideoTempSource.start();
+            }
         }
     }
 
@@ -459,11 +465,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
 
     @Override
     public boolean stopRecord() {
-        return stopRecord(false);
-    }
-
-    public boolean stopRecord(boolean ignoreState) {
-        if ((clientState != STATE.RECORDING || mSwitchCameraLock) && (!ignoreState)) {
+        if (clientState != STATE.RECORDING) {
             return false;
         }
         if (mVideoSource != null) {
@@ -489,6 +491,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         ksyRecordSender.disconnect();
         clientState = STATE.STOP;
         isCanTurnLightFlag = false;
+        mSwitchCameraLock = false;
         return true;
     }
 
@@ -593,9 +596,24 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                     }
                     break;
                 case Constants.MESSAGE_SENDER_PUSH_FAILED:
-                    Log.d(TAG, "server send push fail");
                     if (mPushStreamStateListener != null) {
                         mPushStreamStateListener.onPushStreamState(Constants.PUSH_STATE_FAILED);
+                    }
+                    break;
+                case StartListener.START_COMPLETE:
+                    if (startListener != null) {
+                        startListener.OnStartComplete();
+                    }
+                    break;
+                case StartListener.START_FAILED:
+                    if (startListener != null) {
+                        startListener.OnStartFailed();
+                    }
+                    break;
+                case NetworkMonitor.OnNetworkPoorListener.CACHE_QUEUE_MAX:
+                case NetworkMonitor.OnNetworkPoorListener.FRAME_SEND_TOO_LONG:
+                    if (onNetworkPoorListener != null) {
+                        onNetworkPoorListener.onNetworkPoor(msg.what);
                     }
                     break;
                 default:

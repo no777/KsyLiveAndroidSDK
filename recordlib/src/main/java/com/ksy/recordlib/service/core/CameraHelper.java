@@ -42,7 +42,7 @@ public class CameraHelper {
     public static List<Camera.Size> getSupportCameraSize(int cameraType) {
         List<Camera.Size> sizes = camearSizeTable.get(cameraType);
         if (sizes == null) {
-            android.hardware.Camera camera = CameraHelper.getDefaultCamera(cameraType);
+            Camera camera = CameraHelper.getDefaultCamera(cameraType);
             if (camera != null) {
                 try {
                     sizes = camera.getParameters().getSupportedVideoSizes();

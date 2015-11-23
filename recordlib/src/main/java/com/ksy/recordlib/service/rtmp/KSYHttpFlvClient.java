@@ -1,14 +1,5 @@
 package com.ksy.recordlib.service.rtmp;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
 import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
@@ -19,6 +10,15 @@ import android.os.Message;
 import android.util.Log;
 
 import com.ksy.recordlib.service.util.Constants;
+
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * Created by winlin on 5/2/15. to POST the h.264/avc annexb frame to SRS over

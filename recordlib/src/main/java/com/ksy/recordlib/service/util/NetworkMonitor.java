@@ -9,8 +9,6 @@ import android.net.NetworkInfo;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.ksy.recordlib.service.core.KsyRecordClient;
-
 /**
  * Created by hansentian on 8/3/15.
  */
@@ -81,6 +79,15 @@ public class NetworkMonitor {
             Intent intent = new Intent(Constants.NETWORK_STATE_CHANGED);
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
         }
+    }
+
+    public interface OnNetworkPoorListener {
+
+        static final int CACHE_QUEUE_MAX = 11;
+        static final int FRAME_SEND_TOO_LONG = 21;
+
+        void onNetworkPoor(int source);
+
     }
 
 }

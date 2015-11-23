@@ -268,7 +268,7 @@ public class KsyRecordClientConfig {
         private int mAudioBitRate = Constants.CONFIG_AUDIO_BITRATE_32K;
         private int mAudioEncorder = MediaRecorder.AudioEncoder.AAC;
         private int mVideoFrameRate = Constants.CONFIG_VIDEO_FRAME_RATE_30;
-        private int mVideoBitRate = Constants.CONFIG_VIDEO_BITRATE_500K;
+        private int mVideoBitRate = Constants.CONFIG_VIDEO_BITRATE_750K;
         private int mDropFrameFrequency = 0;
         private int mVideoWidth;
         private int mVideoHeigh;
