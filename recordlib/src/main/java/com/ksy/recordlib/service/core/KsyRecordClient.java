@@ -14,6 +14,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.ViewGroup;
 
+import com.ksy.recordlib.service.data.SenderStatData;
 import com.ksy.recordlib.service.exception.KsyRecordException;
 import com.ksy.recordlib.service.recoder.RecoderAudioSource;
 import com.ksy.recordlib.service.recoder.RecoderVideoSource;
@@ -119,18 +120,11 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         stopRecord();
     }
 
-    private KsyRecordClient() {
-    }
-
     private KsyRecordClient(Context context) {
         this.mContext = context;
         mRecordHandler = new RecordHandler();
         ksyRecordSender = KsyRecordSender.getRecordInstance();
         ksyRecordSender.setStateMonitor(mRecordHandler);
-
-
-        // Remove old network monitor
-        // NetworkMonitor.start(context);
     }
 
     public void takePicture(Camera.PictureCallback callback) {
@@ -573,6 +567,11 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         this.mSurfaceView = null;
     }
 
+    @Override
+    public SenderStatData getSenderStatData() {
+        return ksyRecordSender.getStatData();
+    }
+
     public class RecordHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -625,6 +624,7 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
     public static void setConfig(KsyRecordClientConfig mConfig) {
         KsyRecordClient.mConfig = mConfig;
     }
+
 
 }
 

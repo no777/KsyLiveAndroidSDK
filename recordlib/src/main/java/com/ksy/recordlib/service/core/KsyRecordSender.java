@@ -266,7 +266,6 @@ public class KsyRecordSender {
                 lastAddVideoTs = ksyFlvData.dts;
 //                Log.d(Constants.LOG_TAG, "video_enqueue = " + ksyFlvData.dts + " " + ksyFlvData.isKeyframe());
             } else if (k == FROM_AUDIO) {//音频数据
-                audioFps.tickTock();
                 lastAddAudioTs = ksyFlvData.dts;
             }
             statData.add(ksyFlvData);
@@ -381,6 +380,10 @@ public class KsyRecordSender {
 
     public void setStateMonitor(KsyRecordClient.RecordHandler recordHandler) {
         this.recordHandler = recordHandler;
+    }
+
+    public SenderStatData getStatData() {
+        return statData;
     }
 
     public KsyRecordSender setInputUrl(String inputUrl) {

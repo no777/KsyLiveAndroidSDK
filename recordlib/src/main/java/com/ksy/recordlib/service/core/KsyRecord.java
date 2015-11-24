@@ -3,6 +3,7 @@ package com.ksy.recordlib.service.core;
 import android.view.SurfaceView;
 import android.view.TextureView;
 
+import com.ksy.recordlib.service.data.SenderStatData;
 import com.ksy.recordlib.service.exception.KsyRecordException;
 
 /**
@@ -43,4 +44,6 @@ public interface KsyRecord {
     void setDisplayPreview(SurfaceView surfaceView);
 
     void setDisplayPreview(TextureView textureView);
+
+    SenderStatData getSenderStatData();
 }
