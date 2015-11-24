@@ -145,8 +145,12 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
 
     private void releaseCamera() {
         if (mCamera != null) {
-            mCamera.stopPreview();
-            mCamera.release();
+            try {
+                mCamera.stopPreview();
+                mCamera.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -404,7 +408,7 @@ public class RecoderVideoSource extends KsyMediaSource implements MediaRecorder.
         ksyVideo.type = 11;
         if (type == FRAME_TYPE_SPS) {
             ksyVideo.frameType = KSYFlvData.NALU_TYPE_IDR;
-        }else {
+        } else {
             ksyVideo.frameType = nalutype;
         }
         ksyVideoSender.addToQueue(ksyVideo, FROM_VIDEO_DATA);
