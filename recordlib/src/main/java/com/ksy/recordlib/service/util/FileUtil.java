@@ -1,5 +1,6 @@
 package com.ksy.recordlib.service.util;
 
+import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
@@ -12,18 +13,18 @@ import java.util.Date;
  */
 public class FileUtil {
 
-    public static String getOutputMediaFile(int type) {
+    public static String getOutputMediaFile(Context context, int type) {
         // Check sdcard exist
         if (!Environment.getExternalStorageState().equalsIgnoreCase(Environment.MEDIA_MOUNTED)) {
-            return null;
+            Log.d(Constants.LOG_TAG, "sdcard not found");
+//            return null;
         }
         // Use default picture location
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "CameraSample");
+        File mediaStorageDir = new File(context.getFilesDir(), "CameraSample");
         // Create if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
-                Log.d("CameraSample", "failed to create directory");
+                Log.d(Constants.LOG_TAG, "failed to create picture directory");
                 return null;
             }
         }

@@ -51,7 +51,7 @@ public class RecoderVideoTempSource extends KsyMediaSource implements MediaRecor
         try {
             mRecorder.setCamera(mCamera);
             mConfig.configMediaRecorder(mRecorder, KsyRecordClientConfig.MEDIA_TEMP);
-            path = FileUtil.getOutputMediaFile(Constants.MEDIA_TYPE_VIDEO);
+            path = FileUtil.getOutputMediaFile(mContext, Constants.MEDIA_TYPE_VIDEO);
             mRecorder.setOutputFile(path);
             mRecorder.setMaxDuration(3000);
             mRecorder.setOnInfoListener(this);

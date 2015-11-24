@@ -367,9 +367,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                 if (mCameraSizeChangedListener != null)
                     mCameraSizeChangedListener.onCameraPreviewSize(parameters.getPreviewSize().width, parameters.getPreviewSize().height);
                 parameters.setRotation(0);
-                List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
-                Camera.Size optimalSize = CameraHelper.getOptimalPreviewSize(mSupportedPreviewSizes,
-                        mSurfaceView.getHeight(), mSurfaceView.getWidth());
+//                List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
+//                Camera.Size optimalSize = CameraHelper.getOptimalPreviewSize(mSupportedPreviewSizes,
+//                        mSurfaceView.getHeight(), mSurfaceView.getWidth());
                 ViewGroup.LayoutParams params = mSurfaceView.getLayoutParams();
 
                 if (parameters.getSupportedFocusModes().contains(
