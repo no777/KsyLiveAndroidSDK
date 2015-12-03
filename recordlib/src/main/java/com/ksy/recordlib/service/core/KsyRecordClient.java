@@ -12,7 +12,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.TextureView;
-import android.view.ViewGroup;
+import android.view.View;
 
 import com.ksy.recordlib.service.data.SenderStatData;
 import com.ksy.recordlib.service.exception.KsyRecordException;
@@ -25,6 +25,7 @@ import com.ksy.recordlib.service.util.Constants;
 import com.ksy.recordlib.service.util.NetworkMonitor;
 import com.ksy.recordlib.service.util.OnClientErrorListener;
 import com.ksy.recordlib.service.util.OrientationActivity;
+import com.ksy.recordlib.service.view.CameraTextureView;
 
 import java.io.IOException;
 import java.util.List;
@@ -196,9 +197,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         return this;
     }
 
-    public void setCameraSizeChangedListener(CameraSizeChangeListener listener) {
-        this.mCameraSizeChangedListener = listener;
-    }
+//    public void setCameraSizeChangedListener(CameraSizeChangeListener listener) {
+//        this.mCameraSizeChangedListener = listener;
+//    }
 
     public void setNetworkChangeListener(NetworkChangeListener listener) {
         this.mNetworkChangeListener = listener;
@@ -339,6 +340,30 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         return CAMEAR_NO_FLASH;
     }
 
+    private Camera.Size findBestPreviewSize(Camera mCamera, View view) {
+        List<Camera.Size> sizeList = mCamera.getParameters().getSupportedPreviewSizes();
+        if (sizeList == null || sizeList.isEmpty()) {
+            return null;
+        }
+        final int viewWid = view.getWidth();
+        final int viewHei = view.getHeight();
+        final int viewArea = viewWid * viewHei;
+        final int length = sizeList.size();
+        Log.v(TAG, "findBestPreviewSize viewWid=" + viewWid + " viewHei=" + viewHei);
+        Camera.Size resultSize = null;
+        int deltaArea = 0;
+        for (int i = 0; i < length; i++) {
+            Camera.Size size = sizeList.get(i);
+            final int area = size.width * size.height;
+            final int delta = Math.abs(area - viewArea);
+            if (deltaArea == 0 || delta < deltaArea) {
+                deltaArea = delta;
+                resultSize = size;
+            }
+        }
+        return resultSize;
+    }
+
 
     private boolean setUpCamera(boolean needPreview) {
         try {
@@ -367,24 +392,21 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
                 if (mCameraSizeChangedListener != null)
                     mCameraSizeChangedListener.onCameraPreviewSize(parameters.getPreviewSize().width, parameters.getPreviewSize().height);
                 parameters.setRotation(0);
-//                List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
-//                Camera.Size optimalSize = CameraHelper.getOptimalPreviewSize(mSupportedPreviewSizes,
-//                        mSurfaceView.getHeight(), mSurfaceView.getWidth());
-                ViewGroup.LayoutParams params = mSurfaceView.getLayoutParams();
-
                 if (parameters.getSupportedFocusModes().contains(
                         Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
                     parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
                 }
+                Camera.Size size = findBestPreviewSize(mCamera, (mSurfaceView == null ? mTextureView : mSurfaceView));
+                if (size != null) {
+                    parameters.setPreviewSize(size.width, size.height);
+                }
                 mCamera.setParameters(parameters);
                 if (needPreview) {
-                    params.height = mSurfaceView == null ? mTextureView.getHeight() : mSurfaceView.getHeight();
-                    params.width = mSurfaceView == null ? mTextureView.getWidth() : mSurfaceView.getWidth();
-                    parameters.setPreviewSize(params.width, params.height);
                     try {
                         if (mSurfaceView != null) {
                             mCamera.setPreviewDisplay(mSurfaceView.getHolder());
                         } else if (mTextureView != null) {
+                            ((CameraTextureView) mTextureView).setPreviewSize(size);
                             mCamera.setPreviewTexture(mTextureView.getSurfaceTexture());
                         }
                     } catch (Exception e) {

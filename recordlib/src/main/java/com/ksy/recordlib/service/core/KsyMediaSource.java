@@ -89,7 +89,7 @@ public abstract class KsyMediaSource implements Runnable {
                 frameSumDuration += d;
                 frameSumCount++;
                 delta = 0;
-                average = (long) (frameSumDuration / frameSumCount);
+                average = (frameSumDuration / frameSumCount);
                 if (avDistance > MAX_DISTANCE_TIME || avDistance < -MAX_DISTANCE_TIME) {
                     //audio's DTS large than video's DTS so send video quickly ,delta--
                     delta = (long) (1f / MAX_DISTANCE_TIME * avDistance);

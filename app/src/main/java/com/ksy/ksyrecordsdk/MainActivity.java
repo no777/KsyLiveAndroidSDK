@@ -8,7 +8,6 @@ import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.DrawerLayout;
@@ -19,7 +18,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceHolder;
+import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -47,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
 
     private static final boolean DEBUG = true;
     private static final String TAG = "MainActivity";
-    private CameraSurfaceView mSurfaceView;
+    private TextureView mSurfaceView;
     private FloatingActionButton mFab, change, flashlight;
     private boolean mRecording = false;
     private KsyRecordClient client;
@@ -80,17 +79,7 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         if (orientationObserver.canDetectOrientation()) {
             orientationObserver.enable();
         }
-        // for enable network monitor
         client.registerNetworkMonitor();
-//        if (!mRecording && !isFirstEnter) {
-//            mFab.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    startRecord();
-//                }
-//            }, 100);
-//        }
-//        isFirstEnter = false;
     }
 
 
@@ -232,19 +221,19 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
     }
 
     private void setupSurfaceView() {
-        mSurfaceView = (CameraSurfaceView) findViewById(R.id.surfaceView);
-        SurfaceHolder holder = mSurfaceView.getHolder();
-        // setType must be set in old version, otherwise may cause crash
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        }
+        mSurfaceView = (TextureView) findViewById(R.id.textureview);
+//        SurfaceHolder holder = mSurfaceView.getHolder();
+//        // setType must be set in old version, otherwise may cause crash
+//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+//            holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+//        }
     }
 
     private void setupRecord() {
         client = KsyRecordClient.getInstance(getApplicationContext());
         client.setConfig(config);
         client.setDisplayPreview(mSurfaceView);
-        client.setCameraSizeChangedListener(mSurfaceView);
+//        client.setCameraSizeChangedListener(mSurfaceView);
         client.setOrientationActivity(this);
         client.setNetworkChangeListener(this);
         client.setPushStreamStateListener(this);
