@@ -41,6 +41,10 @@ public interface KsyRecord {
 
 //    void setDropFrameFrequency(int frequency);
 
+    /**
+     * @param surfaceView
+     * @deprecated use {@link KsyRecord#setDisplayPreview(TextureView)} instead avoid preview distortion
+     */
     void setDisplayPreview(SurfaceView surfaceView);
 
     void setDisplayPreview(TextureView textureView);
