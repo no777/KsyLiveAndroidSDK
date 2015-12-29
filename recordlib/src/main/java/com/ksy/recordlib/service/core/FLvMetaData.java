@@ -27,10 +27,10 @@ public class FLvMetaData {
         DataSize = 0;
     }
 
-    public FLvMetaData(KsyRecordClientConfig.Builder builder) {
+    public FLvMetaData(KsyRecordClientConfig builder) {
         this();
         //Audio
-        switch (builder.getAudioEncorder()) {
+        switch (builder.getAudioEncoder()) {
             case MediaRecorder.AudioEncoder.AAC:
                 setProperty("audiocodecid", 10);
                 break;
@@ -58,7 +58,7 @@ public class FLvMetaData {
                 break;
         }
         //Video
-        switch (builder.getVideoEncorder()) {
+        switch (builder.getVideoEncoder()) {
             case MediaRecorder.VideoEncoder.H264:
                 setProperty("videocodecid", 7);
                 break;
@@ -80,7 +80,7 @@ public class FLvMetaData {
                 break;
         }
         setProperty("width",builder.getVideoWidth());
-        setProperty("height",builder.getVideoHeigh());
+        setProperty("height",builder.getVideoHeight());
     }
 
     public void setProperty(String Key, int value) {
