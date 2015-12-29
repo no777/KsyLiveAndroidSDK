@@ -1,5 +1,9 @@
 package com.ksy.recordlib.service.core;
 
+import android.media.MediaRecorder;
+
+import com.ksy.recordlib.service.util.Constants;
+
 import java.util.ArrayList;
 
 /**
@@ -21,6 +25,62 @@ public class FLvMetaData {
     public FLvMetaData() {
         MetaData = new ArrayList<>();
         DataSize = 0;
+    }
+
+    public FLvMetaData(KsyRecordClientConfig.Builder builder) {
+        this();
+        //Audio
+        switch (builder.getAudioEncorder()) {
+            case MediaRecorder.AudioEncoder.AAC:
+                setProperty("audiocodecid", 10);
+                break;
+            default:
+                break;
+        }
+        switch (builder.getAudioBitRate()) {
+            case Constants.CONFIG_AUDIO_BITRATE_32K:
+                setProperty("audiodatarate", 32);
+                break;
+            case Constants.CONFIG_AUDIO_BITRATE_48K:
+                setProperty("audiodatarate", 48);
+                break;
+            case Constants.CONFIG_AUDIO_BITRATE_64K:
+                setProperty("audiodatarate", 64);
+                break;
+            default:
+                break;
+        }
+        switch (builder.getAudioSampleRate()) {
+            case Constants.CONFIG_AUDIO_SAMPLERATE_44100:
+                setProperty("audiosamplerate", 44100);
+                break;
+            default:
+                break;
+        }
+        //Video
+        switch (builder.getVideoEncorder()) {
+            case MediaRecorder.VideoEncoder.H264:
+                setProperty("videocodecid", 7);
+                break;
+            default:
+                break;
+        }
+        switch (builder.getVideoFrameRate()) {
+            case Constants.CONFIG_VIDEO_FRAME_RATE_10:
+                setProperty("framerate", 10);
+                break;
+            case Constants.CONFIG_VIDEO_FRAME_RATE_15:
+                setProperty("framerate", 15);
+                break;
+            case Constants.CONFIG_VIDEO_FRAME_RATE_21:
+                setProperty("framerate", 21);
+                break;
+            case Constants.CONFIG_VIDEO_FRAME_RATE_30:
+                setProperty("framerate", 30);
+                break;
+        }
+        setProperty("width",builder.getVideoWidth());
+        setProperty("height",builder.getVideoHeigh());
     }
 
     public void setProperty(String Key, int value) {
