@@ -111,6 +111,7 @@ public class KsyRecordSender {
             public void run() {
                 try {
                     setRecorderData();
+                    InsertMetaData();
                     cycle();
                 } catch (Exception e) {
                     Log.e(Constants.LOG_TAG, "worker: thread exception. e＝" + e);
@@ -121,6 +122,11 @@ public class KsyRecordSender {
         worker.start();
     }
 
+    private void InsertMetaData(){
+        FLvMetaData myMeta = new FLvMetaData(KsyRecordClient.getConfig());
+        byte[] MetaData = myMeta.getMetaData();
+        _write(MetaData,MetaData.length);
+    }
 
     private void cycle() throws InterruptedException {
         while (!Thread.interrupted()) {
