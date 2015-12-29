@@ -103,7 +103,7 @@ public class FLvMetaData {
         DataSize += Propertysize;
     }
 
-    byte[] getMetaData() {
+    public byte[] getMetaData() {
         MetaDataFrame = new byte[DataSize + EmptySize + 4];
         pointer = 0;
         Addbyte(ScriptData);
