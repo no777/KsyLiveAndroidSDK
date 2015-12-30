@@ -647,6 +647,9 @@ public class KsyRecordClient implements KsyRecord, OnClientErrorListener {
         KsyRecordClient.mConfig = mConfig;
     }
 
+    public static KsyRecordClientConfig getConfig(){
+        return mConfig;
+    }
 
 }
 
