@@ -1,5 +1,7 @@
 #KSYLiveSDK for Android用户手册
 ---
+##由于一些原因,这个项目已经不在维护.
+## This project is no longer maintenance ,very sorry
 ##SDK更新日志
   
   2015-11-13
