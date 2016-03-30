@@ -214,7 +214,8 @@ public class MainActivity extends AppCompatActivity implements OrientationActivi
         // Keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         KsyRecordClientConfig.Builder builder = new KsyRecordClientConfig.Builder();
-        builder.setVideoProfile(CamcorderProfile.QUALITY_480P).setUrl(Constants.URL_DEFAULT);
+        builder.setVideoProfile(CamcorderProfile.QUALITY_720P).setUrl(Constants.URL_DEFAULT);
+        builder.setVideoBitRate(Constants.CONFIG_VIDEO_BITRATE_1500K);
         builder.setCameraType(Camera.CameraInfo.CAMERA_FACING_BACK);
 //        builder.setVideoBitRate(Constants.CONFIG_VIDEO_BITRATE_250K);
         config = builder.build();
